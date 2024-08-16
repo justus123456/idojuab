@@ -594,8 +594,8 @@ header .nav {
     top: 0;
     padding: 1px 2px;
     background: rgb(105, 104, 104);
-    min-height: 12vh; /* Ensure it doesn't cover the whole page */
-    max-height: 12vh;
+    min-height: 11vh; /* Ensure it doesn't cover the whole page */
+    max-height: 11vh;
     z-index: 100000;
     justify-content: center;
     align-items: center;
