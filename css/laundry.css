@@ -17,6 +17,7 @@ body {
   font-size: 16px;
   line-height: 1.5;
   overflow-y: hidden;
+  width: 100%;
 }
 
 .preloader {
@@ -180,12 +181,12 @@ header .nav li a:hover {
 .home .content h2 {
   font-size: 4em;
   font-weight: 400;
-  color: rgb(57, 87, 87);
+  color: rgb(38, 58, 58);
 }
 .home .content p {
   font-size: 1em;
   font-weight: 400;
-  color: rgba(39, 39, 39, 0.842);
+  color: rgba(34, 34, 34, 0.842);
 }
 
 .about {
