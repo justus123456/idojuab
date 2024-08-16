@@ -587,20 +587,21 @@ header .nav {
 
 @media (max-width: 425px) {
   header {
-      width: 100%;
-      padding: 3px 5px; /* Adjust padding for smaller screens */
-      position: fixed;
-      display: flex;
-      top: 0;
-      padding: 5px 3px;
-      background: rgb(105, 104, 104);
-      min-height: 13vh; /* Ensure it doesn't cover the whole page */
-      max-height: 13vh;
-      z-index: 100000;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 60px;
-  }
+    width: 100%;
+    padding: 5px 10px; /* Adjust padding for smaller screens */
+    position: fixed;
+    display: block;
+    top: 0;
+    padding: 1px 2px;
+    background: rgb(105, 104, 104);
+    min-height: 14vh; /* Ensure it doesn't cover the whole page */
+    max-height: 14vh;
+    z-index: 100000;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 60px;
+    left: 0;
+}
   
   header.sticky {
     background: #f5f5f5;
@@ -618,12 +619,13 @@ header .nav {
     font-weight: 300;
     font-size: 11px;
 }
-  header .nav {
-      display: flex;
-      flex-direction: row; /* Stack nav items vertically */
-      align-items: center;
-      gap: 5px; /* Space between nav items */
-  }
+header .nav {
+  display: flex;
+  flex-direction: row; /* Stack nav items vertically */
+  align-items: center;
+  gap: 1px; /* Space between nav items */
+  padding-top: 12px;
+}
   #logout{
     width: 100%;
       padding: 5px;
@@ -646,9 +648,16 @@ header .nav {
       margin-top: 5px;
       
   }
+  .next {
+    display:block; 
+    align-items: center; 
+    gap: 40px; 
+    margin-left: 20px;
+    margin-top: 50px;
+  }
   .buts {
-    height: 80px;  
-    width: 170px; 
+    height: 70px;  
+    width: 130px; 
     color: #fff;
     font-size: 16px; 
     border: 1px solid transparent; 
