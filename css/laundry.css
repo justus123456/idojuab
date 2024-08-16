@@ -720,9 +720,6 @@ header .nav li a:hover {
   }
 }
 @media (max-width: 425px) {
-  header {
-    margin-bottom: 30px;
-  }
   header .menuToggle {
     position: relative;
     width: 40px;
@@ -771,10 +768,6 @@ header .nav li a:hover {
     font-size: 1.3em;
     text-decoration: none;
     text-transform: uppercase;
-  }
-  header .logo img {
-    width: 50px;
-    height: 50px;
   }
   .about {
     padding: 80px 15px;
