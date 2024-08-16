@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>admin page</title>
+        <link rel="stylesheet" href="fonts/css/all.css">
+        <link rel="stylesheet" href="css/admin.css">
+        <link rel="shortcut icon" href="images/Laundry Logo design template - Made with PosterMyWall.png" type="image/x-icon">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+        <style>
+            html::-webkit-scrollbar{
+                width: 1vw;
+            }
+            html::-webkit-scrollbar-thumb{
+                background: rgba(37,37,37);
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <a href="#" class="logo">Idojuan laundry</a>
+            <ul class="nav">
+                <li><a href="#home">product</a></li>
+                <li><a href="#pricing">pricing</a></li>
+                <li><a href="#message">messages</a></li>
+                <li><button id="logout" class="log">logout</button></li>
+                <li><button id="log" class="ion"><i class="fas fa-power-off"></i></button></li>
+
+            </ul>
+            
+        </header>
+        <section class="sect" id="home"  data-aos="fade-down">
+            <div class="firt">
+                <h1>Please Enter Your Product!</h1>
+            </div>
+            <div class="next">
+                <form id="important-form">
+                    <div class="form-row">
+                        <label for="idk">Enter Cloth Type:</label>
+                        <input class="idk" id="idk" name="clothType" type="text" placeholder="Enter clothes" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="price-ironing">Enter Ironing Price:</label>
+                        <input type="number" id="price-ironing" class="idk" placeholder="Enter Price" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="price-washing">Enter Washing Price:</label>
+                        <input type="number" id="price-washing" class="idk" placeholder="Enter Price" required>
+                    </div>
+                    <div class="checkbox-group">
+                        <label for="male">Male</label>
+                        <input type="checkbox" id="male">
+                        <label for="female">Female</label>
+                        <input type="checkbox" id="female">
+                    </div>
+                    <input class="but" type="submit" value="Add">
+                </form>
+                <a href="index.html">
+                    <button class="buts">Check the Price List</button>
+                </a>
+            </div>
+        </section>
+        
+        <section class="pricing" id="pricing"  data-aos="fade-right">
+            <div class="container">
+                <div class="title">
+                    <h2 class="titleText">Price <span>L</span>ist</h2>
+                </div>
+            </div>
+            <div class="table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Clothes</th>
+                            <th>ironing Price</th>
+                            <th>washing price</th>
+                            <th>gender</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="dat">
+                        <!-- Rows will be dynamically populated here -->
+                    </tbody>
+                </table>
+                <button id="clear" class="clear">Clear</button>
+            </div>
+        </section>
+        <section class="message" id="message"  data-aos="fade-up">
+            <div class="container">
+                <div class="title">
+                    <h2 class="titleText"><span>m</span>essages</h2>
+                </div>
+                <div class="table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>name</th>
+                                <th>email</th>
+                                <th>message</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="datam">
+                            <!-- Rows will be dynamically populated here -->
+                        </tbody>
+                    </table>
+                    <button id="delete" class="clear">Clear</button>
+                </div>
+            </div>
+        </section>
+        <div class="cp">
+            <p>&copy; 2024 <a href="#home">Idojuan Laundry and Dry Cleaning Services</a> all rights reserved</p>
+            <button id="arrow">&uparrow;</button>
+        </div>
+
+        
+        <script src="admin.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" integrity="sha512-A7AYk1fGKX6S2SsHywmPkrnzTZHrgiVT7GcQkLGDe2ev0aWb8zejytzS8wjo7PGEXKqJOrjQ4oORtnimIRZBtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script>
+            AOS.init({
+                duration: 600,
+            });
+        </script>
+    </body>
+</html>

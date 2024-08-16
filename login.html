@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login</title>
+        <link rel="stylesheet" href="fonts/css/all.css">
+        <link rel="stylesheet" href="css/login.css">
+        <link rel="shortcut icon"
+            href="images/Laundry Logo design template - Made with PosterMyWall.png"
+            type="image/x-icon">
+    </head>
+    <body>
+        <section>
+            <div class="login-container">
+                <h2>Admin Login</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="space">
+                            <input type="password" id="password" name="password"
+                                required>
+                            <button type="button"
+                                class="btn btn-outline-primary fas fa-eye"
+                                id="show"></button>
+                        </div>
+                    </div>
+                    <button type="submit">Login</button>
+                    <p id="error-message"
+                        style="color: red; display: none;">Invalid credentials.
+                        Please try again.</p>
+                </form>
+            </div>
+        </section>
+        <section class="foot">
+            <div class="cp">
+                <p>&copy; 2024 <a href="#home">Idojuan Laundry and Dry Cleaning
+                        Services</a> all rights reserved</p>
+                <h4><a href="index.html">home</a></h4>
+            </div>
+        </section>
+
+        <script src="login.js"></script>
+    </body>
+</html>

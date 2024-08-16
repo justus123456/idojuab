@@ -1,0 +1,706 @@
+@charset "UTF-8";
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+    text-transform: capitalize;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+    outline: none;
+    list-style: none;
+    text-decoration: none;
+}
+:root {
+  --bg-black-100: rgba(31, 31, 31, 0.9);
+  --bg-white-100: #ddd;
+  --bg-white-50: #eff0f4;
+  --bg-white-25: #f5f5f5;
+  --bg-white-10: #f5f5f5;
+  --text-black-900: #000;
+  --text-black-700: rgba(31, 31, 31);
+  --text-black-600: rgba(172, 172, 172);
+  --text-black-400: rgba(221, 221, 221);
+  --text-black-300: #4d4d4d;
+  --shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+}
+.titleText,
+h2 {
+  color: rgb(31, 31, 31);
+  font-size: 2em;
+  font-weight: 300;
+}
+.titleText span,
+h2 span {
+  color: rgb(31, 31, 31);
+  font-weight: 700;
+  font-size: 1.5em;
+}
+.title {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+body {
+    font-size: 16px;
+    line-height: 1.5;
+    background: #f5f5f5
+}
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 10%;
+    min-height: 1000vh ;
+    padding: 170px 30px;
+    z-index: 100000;
+    display: block;
+    justify-content: space-between;
+    align-items: center;
+    transition: 2s;
+    background: rgb(105, 104, 104);
+}
+  header.sticky {
+    background: #f5f5f5;
+    padding: 10px 20px;
+    box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+}
+  header.sticky .logo {
+    color: #000;
+}
+  header.sticky .nav li a {
+    color: #000;
+}
+header .logo {
+    color: rgb(31, 31, 31);
+    font-weight: 700;
+    font-size: 1.5em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+  header .nav {
+    position: relative;
+    display: block;
+    padding-top: 50px;
+}
+  header .nav li {
+    margin: 0 0 0 10px;
+}
+  header .nav li a {
+    font-weight: 500;
+    font-size: 20px;
+    color: #353434;
+}
+  header .nav li a:hover {
+    color: rgb(27, 27, 27);
+}
+/* Reset margin and padding for all elements */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Styling for the main section */
+.sect {
+  border: 3px solid transparent;
+  margin: 120px auto; /* Center the section horizontally */
+  max-width: 700px; /* Ensure the section doesn’t stretch too wide */
+  min-height: 70vh; /* Minimum height to ensure sufficient space */
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432); /* Slightly increased shadow for emphasis */
+  background-color: #f5f5f5; /* Background color for readability */
+  padding: 15px; /* Padding inside the section */
+  height: auto; /* Adjust height based on content */
+}
+
+/* Styling for the header */
+.firt {
+  text-align: center;
+  font-size: 24px; /* Increased font size for prominence */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-transform: capitalize;
+  font-weight: 300; /* Light font weight for a modern look */
+  color: rgba(31, 31, 31, 0.8); /* Slightly transparent color for a softer appearance */
+  margin-bottom: 20px; /* Margin below the header */
+}
+
+/* Styling for the form container */
+.next {
+  display:flex; 
+  align-items: center; 
+  gap: 40px; 
+  margin-left: 20px;
+}
+
+/* Styling for form rows */
+.form-row {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 10px;
+  justify-content: space-between;
+  
+}
+
+/* Styling for the form label */
+.next label {
+  font-size: 18px; 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: bold;
+  color: #333; 
+}
+
+/* Styling for the input field */
+.idk {
+  height: 40px; /* Increased height for usability */
+  width: 100%; /* Full width with padding */
+  max-width: 300px; /* Maximum width */
+  border: 1px solid #4d4d4d; /* Border color */
+  border-radius: 5px;
+  padding: 0 15px; /* Padding on both sides */
+  font-size: 16px; /* Font size for readability */
+  outline: none; /* Remove default outline */
+  transition: border-color 0.3s; /* Smooth transition effect */
+}
+
+/* Focus effect for the input field */
+.idk:focus {
+  border-color: #388e3c; /* Border color on focus */
+}
+
+/* Styling for the submit button */
+.but {
+  height: 40px; /* Button height */
+  width: 120px; /* Button width */
+  color: #fff;
+  font-size: 16px; /* Font size for the button text */
+  border: none; /* Remove default border */
+  background-color: rgba(53, 52, 52, 0.904); /* Button background color */
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background-color 0.3s, transform 0.2s; /* Smooth transition effects */
+}
+
+/* Hover effect for the submit button */
+.but:hover {
+  background-color: rgba(27, 26, 26, 0.925); /* Darker color on hover */
+  transform: scale(1.05); /* Slightly scale up on hover */
+}
+
+/* Focus effect for the button */
+.but:focus {
+  outline: none; /* Remove default outline */
+}
+
+/* Styling for the additional button below */
+.buts {
+  height: 50px;  
+  width: 250px; 
+  color: #fff;
+  font-size: 16px; 
+  border: 1px solid transparent; 
+  background-color: rgba(31, 31, 31); /* Background color */
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-top: 20px; 
+}
+
+/* Hover effect for the additional button */
+.buts:hover {
+  background-color: rgba(27, 26, 26, 0.925); /* Darker color on hover */
+  transform: scale(1.05); /* Slightly scale up on hover */
+}
+
+/* Focus effect for the additional button */
+.buts:focus {
+  outline: none; /* Remove default outline */
+}
+
+/* Styling for checkbox group */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pricing {
+    padding: 250px 0 80px;
+    max-height: 1000vh;
+    min-height: 100vh;
+  }
+  .pricing .table {
+    display: grid;
+    width: 60%;
+    border: 1px solid transparent;
+    margin: 0 auto;
+    border-collapse: collapse;
+    box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+    background: #f5f5f5;
+    border-radius: 5px;
+    margin-top: 30px;
+    padding: 10px 10px;
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+  ::-webkit-scrollbar {
+    width: 12px; /* Width of the vertical scrollbar */
+    height: 12px; /* Height of the horizontal scrollbar */
+}
+::-webkit-scrollbar-thumb {
+    background: #888; /* Scrollbar color */
+    border-radius: 6px; /* Rounded corners */
+}
+::-webkit-scrollbar-track {
+background: #d4d4d4; /* Track color */
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker color on hover */
+}
+  .pricing .table th {
+    font-size: 1.2em;
+    color: rgb(31, 31, 31);
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    background: #ddd;
+    border-collapse: collapse;
+  }
+  .pricing .table td {
+    font-size: 20px;
+    color: rgb(31, 31, 31);
+    text-transform: capitalize;
+    text-align: center;
+    padding-top: 15px;
+  }
+  .pricing .table td span {
+    -webkit-text-decoration: double line-through;
+            text-decoration: double line-through;
+  }
+  button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--bg-black-100);
+    border: none;
+    color: var(--bg-white-100);
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: var(--text-black-300);
+}
+#logout{
+  width: 100%;
+    padding: 10px;
+    background-color: var(--bg-black-100);
+    border: none;
+    color: var(--bg-white-100);
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 300px;
+}
+#logout:hover{
+  background-color: var(--text-black-300);
+}
+#log{
+  width: 100%;
+    padding: 10px;
+    background-color: var(--bg-black-100);
+    border: none;
+    color: var(--bg-white-100);
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 300px;
+    display: none;
+}
+#log:hover{
+  background-color: var(--text-black-300);
+}
+.clear {
+    width: 100px; /* Adjust width as needed */
+    padding: 10px;
+    margin-top: 20px; /* Add spacing if needed */
+    background-color: var(--bg-black-100);
+    border: none;
+    color: var(--bg-white-100);
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: block;
+    margin: 20px auto; /* Center the button */
+}
+
+.clear:hover {
+    background-color: var(--text-black-300);
+}
+
+  .cp {
+    padding: 8px 40px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+  }
+  .cp p {
+    color: rgb(31, 31, 31);
+  }
+  .cp a {
+    color: rgb(172, 172, 172);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .cp #arrow {
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    display: none; /* Hidden by default */
+    width: 30px;
+    height: 30px;
+    border: none;
+    outline: none;
+    background-color: rgba(31, 31, 31, 0.9);
+    color: rgb(31, 31, 31);
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 20px;
+    z-index: 1000; /* Ensure it sits above other elements */
+    transition: background-color 0.3s;
+  }
+  .cp #arrow:hover {
+    background-color: #333;
+  }
+  .message .table {
+    display: grid;
+    width: 60%;
+    border: 1px solid transparent;
+    margin: 40px auto;
+    border-collapse: collapse;
+    box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+    background: #f5f5f5;
+    border-radius: 5px;
+    padding: 10px 10px;
+    overflow-y: auto;
+    max-height: 80vh;
+  }
+  ::-webkit-scrollbar {
+    width: 12px; /* Width of the vertical scrollbar */
+    height: 12px; /* Height of the horizontal scrollbar */
+}
+::-webkit-scrollbar-thumb {
+    background: #888; /* Scrollbar color */
+    border-radius: 6px; /* Rounded corners */
+}
+::-webkit-scrollbar-track {
+background: #d4d4d4; /* Track color */
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker color on hover */
+}
+  
+  .message .table th {
+    font-size: 1.2em;
+    color: rgb(31, 31, 31);
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    background: #ddd;
+    border-collapse: collapse;
+  }
+  .message .table td {
+    font-size: 20px;
+    color: rgb(31, 31, 31);
+    text-transform: capitalize;
+    text-align: center;
+    padding-top: 15px;
+  }
+  .message .table td span {
+    -webkit-text-decoration: double line-through;
+            text-decoration: double line-through;
+  }
+/* Media Queries */
+@media (max-width: 991px) {
+  header {
+    width: 100%;
+    padding: 5px 10px; /* Adjust padding for smaller screens */
+    position: fixed;
+    display: flex;
+    top: 0;
+    padding: 25px 20px;
+    background: rgb(105, 104, 104);
+    min-height: 15vh; /* Ensure it doesn't cover the whole page */
+    max-height: 15vh;
+    z-index: 100000;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 60px;
+}
+
+header.sticky {
+  background: #f5f5f5;
+  padding: 5px 10px;
+  box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+}
+
+
+header .logo {
+  font-weight: 300;
+  font-size: 1.8em;
+}
+header .nav li {
+  margin: 0 0 0 5px;
+}
+header .nav li a {
+  font-weight: 300;
+  font-size: 30px;
+}
+header .nav {
+    display: flex;
+    flex-direction: row; /* Stack nav items vertically */
+    align-items: center;
+    gap: 10px; /* Space between nav items */
+}
+#logout{
+  width: 100%;
+    padding: 20px;
+    background-color: var(--bg-black-100);
+    border: none;
+    color: var(--bg-white-100);
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 30px;
+}
+#logout:hover{
+  background-color: var(--text-black-300);
+}
+#log{
+  width: 100%;
+    padding: 20px;
+    
+    margin-top: 20px;
+    
+}
+  .sect {
+      margin: 120px auto;
+      padding: 10px;
+  }
+  .pricing .table, .message .table {
+      width: 80%;
+  }
+}
+
+@media (max-width: 768px) {
+  header {
+    width: 100%;
+    padding: 3px 5px; /* Adjust padding for smaller screens */
+    position: fixed;
+    display: flex;
+    top: 0;
+    padding: 20px 10px;
+    background: rgb(105, 104, 104);
+    min-height: 15vh; /* Ensure it doesn't cover the whole page */
+    max-height: 15vh;
+    z-index: 100000;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 60px;
+}
+
+header.sticky {
+  background: #f5f5f5;
+  padding: 5px 10px;
+  box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+}
+
+
+header .logo {
+  font-weight: 300;
+  font-size: 1em;
+}
+header .nav li {
+  margin: 0 0 0 5px;
+}
+header .nav li a {
+  font-weight: 300;
+  font-size: 11px;
+}
+header .nav {
+    display: flex;
+    flex-direction: row; /* Stack nav items vertically */
+    align-items: center;
+    gap: 10px; /* Space between nav items */
+}
+#logout{
+  width: 100%;
+    padding: 15px;
+    background-color: var(--bg-black-100);
+    border: none;
+    color: var(--bg-white-100);
+    font-size: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+#logout:hover{
+  background-color: var(--text-black-300);
+}
+#log{
+  width: 100%;
+    padding: 5px;
+    
+    margin-top: 10px;
+    
+}
+  .sect {
+      margin: 100px auto;
+      padding: 8px;
+  }
+  .pricing .table, .message .table {
+      width: 90%;
+  }
+  .cp {
+      flex-direction: column;
+      padding: 5px 20px;
+  }
+  .cp p, .cp a {
+      font-size: 14px;
+  }
+}
+
+@media (max-width: 425px) {
+  header {
+      width: 100%;
+      padding: 3px 5px; /* Adjust padding for smaller screens */
+      position: fixed;
+      display: flex;
+      top: 0;
+      padding: 20px 10px;
+      background: rgb(105, 104, 104);
+      min-height: 15vh; /* Ensure it doesn't cover the whole page */
+      max-height: 15vh;
+      z-index: 100000;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 60px;
+  }
+  
+  header.sticky {
+    background: #f5f5f5;
+    padding: 5px 10px;
+    box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+}
+
+ 
+header .logo {
+    font-weight: 300;
+    font-size: 1em;
+}
+  header .nav li {
+    margin: 0 0 0 5px;
+}
+  header .nav li a {
+    font-weight: 300;
+    font-size: 11px;
+}
+  header .nav {
+      display: flex;
+      flex-direction: row; /* Stack nav items vertically */
+      align-items: center;
+      gap: 10px; /* Space between nav items */
+  }
+  #logout{
+    width: 100%;
+      padding: 5px;
+      background-color: var(--bg-black-100);
+      border: none;
+      color: var(--bg-white-100);
+      font-size: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 30px;
+  }
+  #logout:hover{
+    background-color: var(--text-black-300);
+  }
+  #log{
+    width: 100%;
+      padding: 5px;
+      
+      margin-top: 20px;
+      
+  }
+  .sect {
+      margin-top: 60px; /* Space for fixed header */
+      padding: 5px;
+  }
+  .pricing .table, .message .table {
+      width: 95%;
+  }
+  .cp {
+      flex-direction: column;
+      padding: 3px 10px;
+  }
+  .cp p, .cp a {
+      font-size: 12px;
+  }
+  #arrow {
+      width: 25px;
+      height: 25px;
+      font-size: 16px;
+  }
+}
+
+@media (max-width: 320px) {
+  header {
+      width: 100%;
+      padding: 2px 5px; /* Adjust padding for very small screens */
+      position: fixed;
+      top: 0;
+      background: rgb(105, 104, 104);
+      min-height: 20vh; /* Ensure it doesn't cover the whole page */
+  }
+  header .nav {
+      display: flex;
+      flex-direction: row; /* Stack nav items vertically */
+      align-items: center;
+      gap: 8px; /* Space between nav items */
+  }
+  .sect {
+      margin-top: 80px; /* Space for fixed header */
+      padding: 3px;
+  }
+  .pricing .table, .message .table {
+      width: 100%;
+  }
+  .cp {
+      flex-direction: column;
+      padding: 2px 5px;
+  }
+  .cp p, .cp a {
+      font-size: 10px;
+  }
+  #arrow {
+      width: 20px;
+      height: 20px;
+      font-size: 14px;
+  }
+}
