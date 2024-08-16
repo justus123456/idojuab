@@ -594,12 +594,12 @@ header .nav {
     top: 0;
     padding: 1px 2px;
     background: rgb(105, 104, 104);
-    min-height: 11vh; /* Ensure it doesn't cover the whole page */
-    max-height: 11vh;
+    min-height: 12vh; /* Ensure it doesn't cover the whole page */
+    max-height: 12vh;
     z-index: 100000;
     justify-content: center;
     align-items: center;
-    margin-bottom: 60px;
+    margin-bottom: 100px;
     left: 0;
 }
   
@@ -609,15 +609,15 @@ header .nav {
     box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
   }
   header .logo {
-    font-weight: 300;
+    font-weight: 400;
     font-size: 1em;
 }
   header .nav li {
     margin: 0 0 0 5px;
 }
   header .nav li a {
-    font-weight: 300;
-    font-size: 11px;
+    font-weight: 400;
+    font-size: 12px;
 }
 header .nav {
   display: flex;
@@ -653,7 +653,7 @@ header .nav {
     align-items: center; 
     gap: 40px; 
     margin-left: 20px;
-    margin-top: 50px;
+    margin-top: 30px;
   }
   .buts {
     height: 70px;  
@@ -680,7 +680,7 @@ header .nav {
     outline: none; /* Remove default outline */
   }
   .sect {
-      margin-top: 60px; /* Space for fixed header */
+      margin-top: 100px; /* Space for fixed header */
       padding: 5px;
       width: 100%;
   }
