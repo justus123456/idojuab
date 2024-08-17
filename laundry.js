@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>${index + 1}</td>
                     <td>${item.clothType}</td>
-                    <td><span id="line">N </span>${item.ironingPrice || 'N/A'}</td>
-                    <td><span id="line">N </span>${item.washingPrice || 'N/A'}</td>
+                    <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
+                    <td><span id="line">N</span> ${item.washingPrice || 'N/A'}</td>
                     <td>${item.maleChecked  ? ('Male') : 'N/A'}</td>
                 </tr>
             `).join('');
@@ -82,8 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>${index + 1}</td>
                     <td>${item.clothType}</td>
-                    <td><span id="line">N </span>${item.ironingPrice || 'N/A'}</td>
-                    <td><span id="line">N </span>${item.washingPrice || 'N/A'}</td>
+                    <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
+                    <td><span id="line">N</span> ${item.washingPrice || 'N/A'}</td>
                     <td>${ item.femaleChecked ? ('Female') : 'N/A'}</td>
                 </tr>
             `).join('');
