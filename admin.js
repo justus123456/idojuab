@@ -31,11 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const ironingPrice = ironingPriceInput.value.trim();
         const washingPrice = washingPriceInput.value.trim();
         const maleChecked = maleCheckbox.checked;
-        const femaleChecked = femaleCheckbox.checked;
 
         if (clothType && (ironingPrice || washingPrice)) {
             const priceList = JSON.parse(localStorage.getItem('priceList')) || [];
-            priceList.push({ clothType, ironingPrice, washingPrice, maleChecked, femaleChecked });
+            priceList.push({ clothType, ironingPrice, washingPrice, maleChecked });
             localStorage.setItem('priceList', JSON.stringify(priceList));
 
             // Clear form inputs
@@ -43,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ironingPriceInput.value = '';
             washingPriceInput.value = '';
             maleCheckbox.checked = false;
-            femaleCheckbox.checked = false;
+            
 
             renderPriceList();
         }
@@ -56,12 +55,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr>
                 <td>${index + 1}</td>
                 <td>${item.clothType}</td>
-                <td>${item.ironingPrice || 'N/A'}</td>
-                <td>${item.washingPrice || 'N/A'}</td>
-                <td>${item.maleChecked || item.femaleChecked ? (item.maleChecked ? 'Male' : 'Female') : 'N/A'}</td>
+                <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
+                <td> <span id="line">N</span>${item.washingPrice || 'N/A'}</td>
+                <td>${item.maleChecked  ? ('Male') : 'N/A'}</td>
                 <td><button class="delete" data-index="${index}">Delete</button></td>
             </tr>
         `).join('');
+
+        const line = getElementById('line');
+        line.textContent = '₦'; 
     }
 
     // Handle deletion of items
@@ -84,7 +86,75 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial render of the price list
     renderPriceList();
 });
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('important');
+    const clothTypeInput = document.getElementById('idkk');
+    const ironingPriceInput = document.getElementById('ironing');
+    const washingPriceInput = document.getElementById('washing');
+    const femaleCheckbox = document.getElementById('females');
+    const priceTable = document.querySelector('.dats');
 
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const clothType = clothTypeInput.value.trim();
+        const ironingPrice = ironingPriceInput.value.trim();
+        const washingPrice = washingPriceInput.value.trim();
+        const femaleChecked = femaleCheckbox.checked;
+
+        if (clothType && (ironingPrice || washingPrice)) {
+            const priceLists = JSON.parse(localStorage.getItem('priceLists')) || [];
+            priceLists.push({ clothType, ironingPrice, washingPrice, femaleChecked });
+            localStorage.setItem('priceLists', JSON.stringify(priceLists));
+
+            // Clear form inputs
+            clothTypeInput.value = '';
+            ironingPriceInput.value = '';
+            washingPriceInput.value = '';
+            femaleCheckbox.checked = false;
+
+            renderPriceList();
+        }
+    });
+
+    // Function to render the price list
+    function renderPriceList() {
+        const priceList = JSON.parse(localStorage.getItem('priceLists')) || [];
+        priceTable.innerHTML = priceList.map((item, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.clothType}</td>
+                <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
+                <td> <span id="line">N</span>${item.washingPrice || 'N/A'}</td>
+                <td>${item.femaleChecked ? ( 'Female') : 'N/A'}</td>
+                <td><button class="deletes" data-index="${index}">Delete</button></td>
+            </tr>
+        `).join('');
+
+        const line = getElementById('line');
+        line.textContent = '₦'; 
+    }
+
+    // Handle deletion of items
+    priceTable.addEventListener('click', (e) => {
+        if (e.target.classList.contains('deletes')) {
+            const index = e.target.dataset.index;
+            const priceList = JSON.parse(localStorage.getItem('priceLists')) || [];
+            priceList.splice(index, 1);
+            localStorage.setItem('priceLists', JSON.stringify(priceLists));
+            renderPriceList();
+        }
+    });
+
+    // Clear the price list
+    document.getElementById('dear').addEventListener('click', () => {
+        localStorage.removeItem('priceLists');
+        renderPriceList();
+    });
+
+    // Initial render of the price list
+    renderPriceList();
+});
 document.addEventListener('DOMContentLoaded', () => {
     const logoutButtons = document.querySelectorAll('#logout, #log');
 

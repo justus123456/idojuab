@@ -54,11 +54,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>${index + 1}</td>
                     <td>${item.clothType}</td>
-                    <td>${item.ironingPrice || 'N/A'}</td>
-                    <td>${item.washingPrice || 'N/A'}</td>
-                    <td>${item.maleChecked || item.femaleChecked ? (item.maleChecked ? 'Male' : 'Female') : 'N/A'}</td>
+                    <td><span id="line">N</span>${item.ironingPrice || 'N/A'}</td>
+                    <td><span id="line">N</span>${item.washingPrice || 'N/A'}</td>
+                    <td>${item.maleChecked  ? ('Male') : 'N/A'}</td>
                 </tr>
             `).join('');
+            const line = getElementById('line');
+            line.textContent = '₦'; 
+        } else {
+            result.innerHTML = '<tr><td colspan="5">No items found.</td></tr>';
+        }
+    }
+
+    // Initial render of the price list
+    renderPriceList();
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const result = document.querySelector('.datd');
+
+    // Function to render the price list
+    function renderPriceList() {
+        // Retrieve items from local storage
+        const items = JSON.parse(localStorage.getItem('priceLists')) || [];
+
+        if (items.length > 0) {
+            result.innerHTML = items.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.clothType}</td>
+                    <td><span id="line">N</span>${item.ironingPrice || 'N/A'}</td>
+                    <td><span id="line">N</span>${item.washingPrice || 'N/A'}</td>
+                    <td>${ item.femaleChecked ? ('Female') : 'N/A'}</td>
+                </tr>
+            `).join('');
+            const line = getElementById('line');
+            line.textContent = '₦'; 
         } else {
             result.innerHTML = '<tr><td colspan="5">No items found.</td></tr>';
         }
