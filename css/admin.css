@@ -275,7 +275,7 @@ background: #d4d4d4; /* Track color */
   .pricing .table td {
     font-size: 20px;
     color: rgb(31, 31, 31);
-    text-transform: capitalize;
+    text-transform: uppercase;
     text-align: center;
     align-items: center;
     padding: 2px;

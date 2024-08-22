@@ -639,7 +639,7 @@ header .nav li a:hover {
 .pricing .table td {
   font-size: 20px;
   color: rgb(31, 31, 31);
-  text-transform: capitalize;
+  text-transform: uppercase;
   text-align: center;
   padding-top: 15px;
   border: 2px solid #ddd;
