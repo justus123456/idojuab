@@ -687,6 +687,28 @@ header .nav {
   .pricing .table, .message .table {
       width: 100%;
   }
+  .pricing .table th {
+    font-size: 1.2em;
+    color: rgb(31, 31, 31);
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    background: #ddd;
+    border-collapse: collapse;
+  }
+  .pricing .table td {
+    font-size: 20px;
+    color: rgb(31, 31, 31);
+    text-transform: capitalize;
+    text-align: center;
+    padding-top: 15px;
+    border: 2px solid #ddd;
+    border-left: transparent;
+    border-top: transparent;
+  }
+  .pricing .table td span {
+    -webkit-text-decoration: double line-through;
+            text-decoration: double line-through;
+  }
   .cp {
       flex-direction: column;
       padding: 3px 10px;
