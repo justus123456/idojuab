@@ -32,11 +32,11 @@ body {
     overflow-y: hidden;
     width: 100%;
 }
-.preloader{
+.preloader {
     position: fixed;
     width: 100vw;
     height: 100vh;
-    background-color:$bg-white-100;
+    background-color: rgba(0, 0, 0, 0.664);
     color: #ffffff;
     z-index: 999999;
     display: flex;
@@ -44,36 +44,115 @@ body {
     align-items: center;
     font-size: 80px;
 }
-.preloader #cog1,
- .preloader #cog3{
-     animation: rollLeft 1s linear infinite;
+
+.pre-items {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-.preloader #cog2{
-    color: $text-black-600;
-    animation: rollRight 1s linear infinite;
-    margin-top: 60px;
+
+.preloader-svg {
+    width: 150px; /* Adjust size as needed */
+    height: 150px; /* Adjust size as needed */
 }
+
+.line {
+    animation: rotateLine 2s infinite;
+}
+
+.left {
+    animation-delay: 0s;
+}
+
+.right {
+    animation-delay: 1s; /* Staggered start for a visual effect */
+}
+
+.top {
+    animation: moveTop 2s infinite;
+}
+
+.bottom {
+    animation: moveBottom 2s infinite;
+}
+
+.box {
+    stroke: rgba(255, 255, 255, 1);
+    animation: changeBoxColor 2s infinite;
+}
+
+.top-box {
+    animation: fadeTopBox 2s infinite;
+}
+
+.bottom-box {
+    animation: fadeBottomBox 2s infinite;
+}
+
+@keyframes rotateLine {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(180deg);
+    }
+}
+
+@keyframes moveTop {
+    0% {
+        d: path("M 50 21 V 40");
+    }
+    100% {
+        d: path("M 50 59 V 40");
+    }
+}
+
+@keyframes moveBottom {
+    0% {
+        d: path("M 50 60 V 79");
+    }
+    100% {
+        d: path("M 50 98 V 79");
+    }
+}
+
+@keyframes changeBoxColor {
+    0% {
+        stroke: rgba(255, 255, 255, 1);
+    }
+    50% {
+        stroke: rgba(100, 100, 100, 0);
+    }
+    100% {
+        stroke: rgba(255, 255, 255, 1);
+    }
+}
+
+@keyframes fadeTopBox {
+    0% {
+        stroke: rgba(255, 255, 255, 1);
+    }
+    100% {
+        stroke: rgba(100, 100, 100, 0);
+    }
+}
+
+@keyframes fadeBottomBox {
+    0% {
+        stroke: rgba(100, 100, 100, 0);
+    }
+    100% {
+        stroke: rgba(255, 255, 255, 1);
+    }
+}
+
 .fadeOut{
     opacity: 0.7;
     transform: scale(0);
     transition: 2s;
+    border-radius: 10%;
 }
-@keyframes rollRight {
-    from{
-        transform: rotate(0deg);
-    }
-    to{
-        transform: rotate(360deg);
-    }
-}
-@keyframes rollLeft {
-    from{
-        transform: rotate(360deg);
-    }
-    to{
-        transform: rotate(0deg);
-    }
-}
+
 :before,
 :after {
     box-sizing: border-box;

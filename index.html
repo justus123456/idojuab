@@ -28,12 +28,34 @@
     </head>
     <body>
         <div class="preloader">
-            <div class="pre-items position-relative">
-                <span class="fas fa-cog" id="cog1"></span>
-                <span class="fas fa-cog" id="cog2"></span>
-                <span class="fas fa-cog" id="cog3"></span>
+            <div class="pre-items">
+                <svg viewBox="0 0 100 100" class="preloader-svg">
+                    <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="6">
+                        <!-- Left line -->
+                        <path class="line left" d="M 21 40 V 59" />
+                        
+                        <!-- Right line -->
+                        <path class="line right" d="M 79 40 V 59" />
+                        
+                        <!-- Top line -->
+                        <path class="line top" d="M 50 21 V 40" />
+                        
+                        <!-- Bottom line -->
+                        <path class="line bottom" d="M 50 60 V 79" />
+                        
+                        <!-- Top box -->
+                        <path class="box top-box" d="M 50 21 L 79 40 L 50 60 L 21 40 Z"/>
+                        
+                        <!-- Middle box -->
+                        <path class="box mid-box" d="M 50 40 L 79 59 L 50 79 L 21 59 Z"/>
+                        
+                        <!-- Bottom box -->
+                        <path class="box bottom-box" d="M 50 59 L 79 78 L 50 98 L 21 78 Z"/>
+                    </g>
+                </svg>
             </div>
         </div>
+        
         <header>
             <a href="#" class="logo">Idojuan laundry</a>
             <div class="menuToggle" onclick="toggleMenu();"></div>
