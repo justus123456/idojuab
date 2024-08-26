@@ -14,207 +14,241 @@ window.addEventListener("scroll", function() {
         if (icon) icon.style.display = 'none';
     }
 });
+// Admin.js
+
+const apiUrl = 'http://localhost:3000';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('important-form');
-    const clothTypeInput = document.getElementById('idk');
-    const ironingPriceInput = document.getElementById('price-ironing');
-    const washingPriceInput = document.getElementById('price-washing');
-    const maleCheckbox = document.getElementById('male');
-    const femaleCheckbox = document.getElementById('female');
-    const priceTable = document.querySelector('.dat');
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const clothType = clothTypeInput.value.trim();
-        const ironingPrice = ironingPriceInput.value.trim();
-        const washingPrice = washingPriceInput.value.trim();
-        const maleChecked = maleCheckbox.checked;
-
-        if (clothType && (ironingPrice || washingPrice)) {
-            const priceList = JSON.parse(localStorage.getItem('priceList')) || [];
-            priceList.push({ clothType, ironingPrice, washingPrice, maleChecked });
-            localStorage.setItem('priceList', JSON.stringify(priceList));
-
-            // Clear form inputs
-            clothTypeInput.value = '';
-            ironingPriceInput.value = '';
-            washingPriceInput.value = '';
-            maleCheckbox.checked = false;
-            
-
-            renderPriceList();
+    // Function to render the price list for a specific gender
+    function renderPriceList(prices, tableBodyClass, gender) {
+        const result = document.querySelector(tableBodyClass);
+        if (result) {
+            const filteredPrices = prices.filter(item => item.gender === gender);
+            result.innerHTML = filteredPrices.length > 0 
+                ? filteredPrices.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.clothType}</td>
+                        <td><span id="line">₦</span> ${item.ironingPrice || 'N/A'}</td>
+                        <td><span id="line">₦</span> ${item.washingPrice || 'N/A'}</td>
+                        <td>${item.gender}</td>
+                        <td><button class="delete" data-id="${item.id}" data-gender="${gender}">Delete</button></td>
+                    </tr>
+                `).join('') 
+                : '<tr><td colspan="6">No items found.</td></tr>';
+        } else {
+            console.error('Table body not found for class:', tableBodyClass);
         }
-    });
-
-    // Function to render the price list
-    function renderPriceList() {
-        const priceList = JSON.parse(localStorage.getItem('priceList')) || [];
-        priceTable.innerHTML = priceList.map((item, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${item.clothType}</td>
-                <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
-                <td> <span id="line">N</span> ${item.washingPrice || 'N/A'}</td>
-                <td>${item.maleChecked  ? ('Male') : 'N/A'}</td>
-                <td><button class="delete" data-index="${index}">Delete</button></td>
-            </tr>
-        `).join('');
-
-        const line = getElementById('line');
-        line.textContent = '₦'; 
     }
 
-    // Handle deletion of items
-    priceTable.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete')) {
-            const index = e.target.dataset.index;
-            const priceList = JSON.parse(localStorage.getItem('priceList')) || [];
-            priceList.splice(index, 1);
-            localStorage.setItem('priceList', JSON.stringify(priceList));
-            renderPriceList();
+    // Fetch prices and render them
+    function fetchPrices() {
+        fetch(`${apiUrl}/prices`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fetched Data:', data); // Log fetched data
+                renderPriceList(data, '.dat', 'Male');   // Render male prices
+                renderPriceList(data, '.dats', 'Female'); // Render female prices
+            })
+            .catch(error => console.error('Error fetching prices:', error));
+    }
+
+    setInterval(fetchPrices, 5000);
+    fetchPrices();
+
+    // Form Handling for Adding Prices
+    const maleForm = document.getElementById('important-form');
+    const femaleForm = document.getElementById('important');
+
+    if (maleForm) {
+        maleForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const clothType = document.getElementById('idk').value.trim();
+            const ironingPrice = document.getElementById('price-ironing').value.trim();
+            const washingPrice = document.getElementById('price-washing').value.trim();
+            const isMale = document.getElementById('male').checked;
+
+            if (clothType && ironingPrice && washingPrice && isMale) {
+                fetch(`${apiUrl}/prices`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clothType, ironingPrice, washingPrice, gender: 'Male' })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    maleForm.reset();
+                    fetchPrices(); // Refresh the list
+                })
+                .catch(error => console.error('Error adding male price:', error));
+            }
+        });
+    } else {
+        console.error('Male form not found');
+    }
+
+    if (femaleForm) {
+        femaleForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const clothType = document.getElementById('idkk').value.trim();
+            const ironingPrice = document.getElementById('ironing').value.trim();
+            const washingPrice = document.getElementById('washing').value.trim();
+            const isFemale = document.getElementById('females').checked;
+
+            if (clothType && ironingPrice && washingPrice && isFemale) {
+                fetch(`${apiUrl}/prices`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clothType, ironingPrice, washingPrice, gender: 'Female' })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    femaleForm.reset();
+                    fetchPrices(); // Refresh the list
+                })
+                .catch(error => console.error('Error adding female price:', error));
+            }
+        });
+    } else {
+        console.error('Female form not found');
+    }
+
+    // Clear Buttons Handling
+    const clearMaleButton = document.getElementById('clear');
+    const clearFemaleButton = document.getElementById('dear');
+    const clearMessagesButton = document.getElementById('delete');
+
+    if (clearMaleButton) {
+        clearMaleButton.addEventListener('click', () => {
+            fetch(`${apiUrl}/prices?gender=Male`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                renderPriceList([], '.dat', 'Male');   // Clear male prices
+            })
+            .catch(error => console.error('Error clearing male prices:', error));
+        });
+    } else {
+        console.error('Clear male button not found');
+    }
+
+    if (clearFemaleButton) {
+        clearFemaleButton.addEventListener('click', () => {
+            fetch(`${apiUrl}/prices?gender=Female`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                renderPriceList([], '.dats', 'Female'); // Clear female prices
+            })
+            .catch(error => console.error('Error clearing female prices:', error));
+        });
+    } else {
+        console.error('Clear female button not found');
+    }
+
+    if (clearMessagesButton) {
+        clearMessagesButton.addEventListener('click', () => {
+            fetch(`${apiUrl}/messages`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                renderMessageList([]); // Clear messages
+            })
+            .catch(error => console.error('Error clearing messages:', error));
+        });
+    } else {
+        console.error('Clear messages button not found');
+    }
+
+    // Delete Button Handling for Prices
+    function setupDeleteButtons() {
+        document.querySelector('.dat').addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete') && e.target.dataset.gender === 'Male') {
+                const id = e.target.dataset.id;
+                fetch(`${apiUrl}/prices/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(() => fetchPrices()) // Refresh the lists
+                .catch(error => console.error('Error deleting male price:', error));
+            }
+        });
+
+        document.querySelector('.dats').addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete') && e.target.dataset.gender === 'Female') {
+                const id = e.target.dataset.id;
+                fetch(`${apiUrl}/prices/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(() => fetchPrices()) // Refresh the lists
+                .catch(error => console.error('Error deleting female price:', error));
+            }
+        });
+    }
+
+    setupDeleteButtons();
+
+    // Render Messages
+    function renderMessageList(messages) {
+        const result = document.querySelector('.datam');
+        if (result) {
+            result.innerHTML = messages.length > 0 
+                ? messages.map((message) => `
+                    <tr>
+                        <td>${message.name}</td>
+                        <td>${message.email}</td>
+                        <td>${message.message}</td>
+                        <td><button class="delete-message" data-id="${message.id}">Delete</button></td>
+                    </tr>
+                `).join('') 
+                : '<tr><td colspan="4">No messages found.</td></tr>';
+        } else {
+            console.error('Table body not found for messages');
+        }
+    }
+
+    function fetchMessages() {
+        fetch(`${apiUrl}/messages`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fetched Messages:', data); // Log fetched messages
+                renderMessageList(data); // Render messages
+            })
+            .catch(error => console.error('Error fetching messages:', error));
+    }
+
+    fetchMessages(); // Fetch messages on load
+
+    // Delete Message Handling
+    document.querySelector('.datam').addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-message')) {
+            const id = e.target.dataset.id;
+            fetch(`${apiUrl}/messages/${id}`, {
+                method: 'DELETE'
+            })
+            .then(() => fetchMessages()) // Refresh the message list
+            .catch(error => console.error('Error deleting message:', error));
         }
     });
-
-    // Clear the price list
-    document.getElementById('clear').addEventListener('click', () => {
-        localStorage.removeItem('priceList');
-        renderPriceList();
-    });
-
-    // Initial render of the price list
-    renderPriceList();
 });
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('important');
-    const clothTypeInput = document.getElementById('idkk');
-    const ironingPriceInput = document.getElementById('ironing');
-    const washingPriceInput = document.getElementById('washing');
-    const femaleCheckbox = document.getElementById('females');
-    const priceTable = document.querySelector('.dats');
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const clothType = clothTypeInput.value.trim();
-        const ironingPrice = ironingPriceInput.value.trim();
-        const washingPrice = washingPriceInput.value.trim();
-        const femaleChecked = femaleCheckbox.checked;
-
-        if (clothType && (ironingPrice || washingPrice)) {
-            const priceLists = JSON.parse(localStorage.getItem('priceLists')) || [];
-            priceLists.push({ clothType, ironingPrice, washingPrice, femaleChecked });
-            localStorage.setItem('priceLists', JSON.stringify(priceLists));
-
-            // Clear form inputs
-            clothTypeInput.value = '';
-            ironingPriceInput.value = '';
-            washingPriceInput.value = '';
-            femaleCheckbox.checked = false;
-
-            renderPriceList();
-        }
-    });
-
-    // Function to render the price list
-    function renderPriceList() {
-        const priceList = JSON.parse(localStorage.getItem('priceLists')) || [];
-        priceTable.innerHTML = priceList.map((item, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${item.clothType}</td>
-                <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
-                <td> <span id="line">N</span> ${item.washingPrice || 'N/A'}</td>
-                <td>${item.femaleChecked ? ( 'Female') : 'N/A'}</td>
-                <td><button class="deletes" data-index="${index}">Delete</button></td>
-            </tr>
-        `).join('');
-
-        const line = getElementById('line');
-        line.textContent = '₦'; 
-    }
-
-    // Handle deletion of items
-    priceTable.addEventListener('click', (e) => {
-        if (e.target.classList.contains('deletes')) {
-            const index = e.target.dataset.index;
-            const priceList = JSON.parse(localStorage.getItem('priceLists')) || [];
-            priceList.splice(index, 1);
-            localStorage.setItem('priceLists', JSON.stringify(priceLists));
-            renderPriceList();
-        }
-    });
-
-    // Clear the price list
-    document.getElementById('dear').addEventListener('click', () => {
-        localStorage.removeItem('priceLists');
-        renderPriceList();
-    });
-
-    // Initial render of the price list
-    renderPriceList();
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const logoutButtons = document.querySelectorAll('#logout, #log');
-
-    // Check if the user is logged in
-    if (localStorage.getItem('loggedIn') !== 'true') {
-        window.location.href = 'login.html'; // Redirect to login page if not logged in
-    }
-
-    // Function to handle logout
-    function handleLogout() {
-        localStorage.removeItem('loggedIn');
-        window.location.href = 'login.html'; // Redirect to login page
-    }
-
-    // Add event listener to both logout buttons
-    logoutButtons.forEach(button => {
-        button.addEventListener('click', handleLogout);
-    });
-});
-
+// admin.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const dataTable = document.querySelector('.datam');
-    const clearButton = document.getElementById('delete');
-
-    // Function to render messages from local storage
-    function renderMessages() {
-        let messages = JSON.parse(localStorage.getItem('messages')) || [];
-        dataTable.innerHTML = messages.map((msg, index) => `
-            <tr>
-                <td>${msg.name}</td>
-                <td>${msg.email}</td>
-                <td>${msg.message}</td>
-                <td><button class="del" data-index="${index}">Delete</button></td>
-            </tr>
-        `).join('');
-    }
-
-    // Function to delete message from local storage
-    function deleteMessage(index) {
-        let messages = JSON.parse(localStorage.getItem('messages')) || [];
-        messages.splice(index, 1);
-        localStorage.setItem('messages', JSON.stringify(messages));
-        renderMessages();
-    }
-
-    // Event listener for delete buttons
-    dataTable.addEventListener('click', (e) => {
-        if (e.target.classList.contains('del')) {
-            const index = e.target.getAttribute('data-index');
-            deleteMessage(index);
+    // Function to check authentication status
+    function checkAuthentication() {
+        const loggedIn = localStorage.getItem('loggedIn');
+        if (loggedIn !== 'true') {
+            // Redirect to login page if not logged in
+            window.location.href = '/login.html';
         }
-    });
+    }
 
-    // Event listener for clear button
-    clearButton.addEventListener('click', () => {
-        localStorage.removeItem('messages');
-        renderMessages();
-    });
+    checkAuthentication();
 
-    // Initial rendering of messages
-    renderMessages();
+    // Logout functionality
+    const logoutButton = document.getElementById('logout');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem('loggedIn');
+            window.location.href = 'login.html';
+        });
+    }
 });

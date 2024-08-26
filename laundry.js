@@ -21,112 +21,79 @@ window.addEventListener('load', () => {
     }, 3000);
 });
 
-// Scroll to top button
-document.addEventListener('DOMContentLoaded', () => {
-    const arrowButton = document.getElementById('arrow');
-
-    // Show or hide the button based on scroll position
-    window.onscroll = function() {
-        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-            arrowButton.style.display = "block";
-        } else {
-            arrowButton.style.display = "none";
-        }
-    };
-
-    // Scroll to the top of the document on button click
-    arrowButton.addEventListener('click', function() {
-        document.body.scrollTop = 0; // For Safari
-        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-    });
-});
+const apiUrl = 'http://localhost:3000';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const result = document.querySelector('.dat');
-
     // Function to render the price list
-    function renderPriceList() {
-        // Retrieve items from local storage
-        const items = JSON.parse(localStorage.getItem('priceList')) || [];
-
-        if (items.length > 0) {
-            result.innerHTML = items.map((item, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.clothType}</td>
-                    <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
-                    <td><span id="line">N</span> ${item.washingPrice || 'N/A'}</td>
-                    <td>${item.maleChecked  ? ('Male') : 'N/A'}</td>
-                </tr>
-            `).join('');
-            const line = getElementById('line');
-            line.textContent = '₦'; 
+    function renderPriceList(prices, tableBodyClass, gender) {
+        const result = document.querySelector(tableBodyClass);
+        if (result) {
+            const filteredPrices = prices.filter(item => item.gender === gender);
+            result.innerHTML = filteredPrices.length > 0 
+                ? filteredPrices.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.clothType}</td>
+                        <td><span id="line">₦</span> ${item.ironingPrice || 'N/A'}</td>
+                        <td><span id="line">₦</span> ${item.washingPrice || 'N/A'}</td>
+                        <td>${item.gender}</td>
+                    </tr>
+                `).join('') 
+                : '<tr><td colspan="5">No items found.</td></tr>';
         } else {
-            result.innerHTML = '<tr><td colspan="5">No items found.</td></tr>';
+            console.error('Table body not found for class:', tableBodyClass);
         }
     }
 
-    // Initial render of the price list
-    renderPriceList();
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const result = document.querySelector('.datd');
-
-    // Function to render the price list
-    function renderPriceList() {
-        // Retrieve items from local storage
-        const items = JSON.parse(localStorage.getItem('priceLists')) || [];
-
-        if (items.length > 0) {
-            result.innerHTML = items.map((item, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.clothType}</td>
-                    <td><span id="line">N</span> ${item.ironingPrice || 'N/A'}</td>
-                    <td><span id="line">N</span> ${item.washingPrice || 'N/A'}</td>
-                    <td>${ item.femaleChecked ? ('Female') : 'N/A'}</td>
-                </tr>
-            `).join('');
-            const line = getElementById('line');
-            line.textContent = '₦'; 
-        } else {
-            result.innerHTML = '<tr><td colspan="5">No items found.</td></tr>';
-        }
+    function poll() {
+        fetch(`${apiUrl}/prices`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fetched Data:', data); // Log fetched data
+                renderPriceList(data, '.dat', 'Male');   // Render male prices
+                renderPriceList(data, '.datd', 'Female'); // Render female prices
+            })
+            .catch(error => console.error('Error fetching prices:', error));
     }
 
-    // Initial render of the price list
-    renderPriceList();
-});
-document.addEventListener('DOMContentLoaded', () => {
+    setInterval(poll, 5000);
+    poll();
+
+    // Contact form handling
     const form = document.getElementById('contact-form');
-    const nameInput = document.getElementById('name');
-    const emailInput = document.getElementById('mail'); // Updated to match your HTML
-    const messageInput = document.getElementById('info'); // Updated to match your HTML
-    const successMessage = document.getElementById('success-message');
-
-    if (form && nameInput && emailInput && messageInput && successMessage) {
+    if (form) {
         form.addEventListener('submit', (e) => {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault();
 
-            const name = nameInput.value.trim();
-            const email = emailInput.value.trim();
-            const message = messageInput.value.trim();
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('mail');
+            const messageInput = document.getElementById('info');
+            const successMessage = document.getElementById('success-message');
 
-            if (name && email && message) {
-                let messages = JSON.parse(localStorage.getItem('messages')) || [];
-                messages.push({ name, email, message });
-                localStorage.setItem('messages', JSON.stringify(messages));
+            if (nameInput && emailInput && messageInput && successMessage) {
+                const name = nameInput.value.trim();
+                const email = emailInput.value.trim();
+                const message = messageInput.value.trim();
 
-                // Clear form fields
-                nameInput.value = '';
-                emailInput.value = '';
-                messageInput.value = '';
-
-                // Show success message
-                successMessage.style.display = 'block';
-                setTimeout(() => successMessage.style.display = 'none', 3000); // Hide after 3 seconds
+                if (name && email && message) {
+                    fetch(`${apiUrl}/messages`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, message })
+                    })
+                    .then(response => response.json())
+                    .then(() => {
+                        nameInput.value = '';
+                        emailInput.value = '';
+                        messageInput.value = '';
+                        successMessage.style.display = 'block';
+                        setTimeout(() => successMessage.style.display = 'none', 3000);
+                    })
+                    .catch(error => console.error('Error submitting message:', error));
+                }
             }
         });
+    } else {
+        console.error('Contact form not found');
     }
 });
-
