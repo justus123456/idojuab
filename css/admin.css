@@ -93,7 +93,7 @@ header .logo {
   header .nav li a {
     font-weight: 500;
     font-size: 20px;
-    color: #353434;
+    color: rgba(255, 255, 255, 0.822);
 }
   header .nav li a:hover {
     color: rgb(27, 27, 27);
