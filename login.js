@@ -38,4 +38,5 @@ document.addEventListener('DOMContentLoaded', () => {
         showBtn.classList.toggle('fa-eye-slash');
         password.type = password.type === 'password' ? 'text' : 'password';
     });
+    
 });

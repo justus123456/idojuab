@@ -1,1 +1,17 @@
 .vercel
+# Node.js modules
+node_modules/
+
+# Environment variable files
+.env
+
+# Logs
+*.log
+
+# Build output
+dist/
+build/
+
+# System files
+.DS_Store
+Thumbs.db
