@@ -2,46 +2,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form');
     const errorMessage = document.getElementById('error-message');
     const password = document.getElementById('password');
-    
-    // Determine API URL based on environment
-    const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000'
-        : window.location.origin; // Use same origin for production
 
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault(); // Prevent form submission
+    if (!form || !errorMessage || !password) {
+        return;
+    }
 
-        const username = document.getElementById('username').value;
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!window.supabaseClient) {
+            errorMessage.textContent = 'Supabase client not available.';
+            errorMessage.style.display = 'block';
+            return;
+        }
+
+        const email = document.getElementById('username').value.trim();
         const passwordValue = password.value;
 
-        try {
-            const response = await fetch(apiUrl + '/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password: passwordValue }),
-                credentials: 'include'
-            });
+        const { error } = await window.supabaseClient.auth.signInWithPassword({
+            email,
+            password: passwordValue,
+        });
 
-            if (response.ok) {
-                window.location.href = 'admin.html';
-            } else {
-                errorMessage.textContent = 'Invalid username or password'; // Display error message
-                errorMessage.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            errorMessage.textContent = 'An error occurred, please try again later'; // Display generic error message
+        if (error) {
+            errorMessage.textContent = error.message || 'Invalid credentials. Please try again.';
             errorMessage.style.display = 'block';
+            return;
         }
+
+        window.location.href = 'admin.html';
     });
 
     const showBtn = document.getElementById('show');
-    showBtn.addEventListener('click', () => {
-        showBtn.classList.toggle('fa-eye');
-        showBtn.classList.toggle('fa-eye-slash');
-        password.type = password.type === 'password' ? 'text' : 'password';
-    });
-    
+    if (showBtn) {
+        showBtn.addEventListener('click', () => {
+            showBtn.classList.toggle('fa-eye');
+            showBtn.classList.toggle('fa-eye-slash');
+            password.type = password.type === 'password' ? 'text' : 'password';
+        });
+    }
 });
