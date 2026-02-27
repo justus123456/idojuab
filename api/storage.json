@@ -1,0 +1,10 @@
+{
+  "prices": [],
+  "messages": [],
+  "users": [
+    {
+      "username": "admin",
+      "password": "$2b$10$0LW6UoPxlVS.2PJuullAeu1nan.hCgp1TbKjsCMef.i8dPGuj3qpa"
+    }
+  ]
+}
