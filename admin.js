@@ -1,249 +1,303 @@
-// Sticky header on scroll
-window.addEventListener('scroll', () => {
-    const header = document.querySelector('header');
-    const icon = document.getElementById('log');
-    const log = document.getElementById('logout');
+// ========================================
+// API URL SETUP
+// ========================================
+const apiUrl =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000"
+    : window.location.origin;
 
-    if (header) {
-        header.classList.toggle('sticky', window.scrollY > 0);
-    }
 
-    if (window.scrollY > 0) {
-        if (log) log.style.display = 'none';
-        if (icon) icon.style.display = 'block';
-    } else {
-        if (log) log.style.display = 'block';
-        if (icon) icon.style.display = 'none';
-    }
+// ========================================
+// STICKY HEADER + LOGOUT ICON TOGGLE
+// ========================================
+window.addEventListener("scroll", () => {
+  const header = document.querySelector("header");
+  const logoutText = document.getElementById("logout");
+  const logoutIcon = document.getElementById("log");
+
+  if (header) {
+    header.classList.toggle("sticky", window.scrollY > 0);
+  }
+
+  if (window.scrollY > 0) {
+    if (logoutText) logoutText.style.display = "none";
+    if (logoutIcon) logoutIcon.style.display = "block";
+  } else {
+    if (logoutText) logoutText.style.display = "block";
+    if (logoutIcon) logoutIcon.style.display = "none";
+  }
 });
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const client = window.supabaseClient;
-    if (!client) {
-        console.error('Supabase client not available.');
-        return;
+
+// ========================================
+// MAIN APP
+// ========================================
+document.addEventListener("DOMContentLoaded", () => {
+
+  // ========================================
+  // AUTH CHECK
+  // ========================================
+  async function checkAuthentication() {
+    try {
+      const response = await fetch(`${apiUrl}/auth/check`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        window.location.href = "/login.html";
+      }
+    } catch (error) {
+      window.location.href = "/login.html";
+    }
+  }
+
+  checkAuthentication();
+
+
+  // ========================================
+  // LOGOUT FUNCTION
+  // ========================================
+  async function logoutUser(e) {
+    if (e) e.preventDefault();
+
+    try {
+      await fetch(`${apiUrl}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      window.location.href = "/login.html";
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  }
+
+  const logoutText = document.getElementById("logout");
+  const logoutIcon = document.getElementById("log");
+
+  if (logoutText) logoutText.addEventListener("click", logoutUser);
+  if (logoutIcon) logoutIcon.addEventListener("click", logoutUser);
+
+
+  // ========================================
+  // PRICE RENDERING
+  // ========================================
+  function renderPriceList(prices, selector, gender) {
+    const tableBody = document.querySelector(selector);
+    if (!tableBody) return;
+
+    const filtered = prices.filter(item => item.gender === gender);
+
+    if (filtered.length === 0) {
+      tableBody.innerHTML =
+        `<tr><td colspan="6">No ${gender} items found.</td></tr>`;
+      return;
     }
 
-    async function checkAuthentication() {
-        const { data, error } = await client.auth.getSession();
-        if (error || !data?.session) {
-            window.location.href = '/login.html';
-        }
+    tableBody.innerHTML = filtered.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.cloth_type ?? item.clothType ?? "N/A"}</td>
+        <td>₦ ${item.ironing_price ?? item.ironingPrice ?? "N/A"}</td>
+        <td>₦ ${item.washing_price ?? item.washingPrice ?? "N/A"}</td>
+        <td>${item.gender}</td>
+        <td>
+          <button class="delete-price" 
+                  data-id="${item.id}" 
+                  data-gender="${item.gender}">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+
+  // ========================================
+  // FETCH PRICES
+  // ========================================
+  async function fetchPrices() {
+    try {
+      const response = await fetch(`${apiUrl}/prices`, {
+        credentials: "include"
+      });
+
+      const data = await response.json();
+
+      renderPriceList(data, ".dat", "Male");
+      renderPriceList(data, ".dats", "Female");
+
+    } catch (error) {
+      console.error("Error fetching prices:", error);
     }
+  }
 
-    function renderPriceList(prices, tableBodyClass, gender) {
-        const result = document.querySelector(tableBodyClass);
-        if (!result) {
-            console.error('Table body not found for class:', tableBodyClass);
-            return;
-        }
+  fetchPrices();
 
-        const filteredPrices = prices.filter((item) => item.gender === gender);
-        result.innerHTML = filteredPrices.length > 0
-            ? filteredPrices.map((item, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.cloth_type ?? item.clothType ?? 'N/A'}</td>
-                    <td><span id="line">N</span> ${item.ironing_price ?? item.ironingPrice ?? 'N/A'}</td>
-                    <td><span id="line">N</span> ${item.washing_price ?? item.washingPrice ?? 'N/A'}</td>
-                    <td>${item.gender}</td>
-                    <td><button class="delete" data-id="${item.id}" data-gender="${gender}">Delete</button></td>
-                </tr>
-            `).join('')
-            : '<tr><td colspan="6">No items found.</td></tr>';
-    }
 
-    async function fetchPrices() {
-        const { data, error } = await client.from('prices').select('*').order('id', { ascending: true });
-        if (error) {
-            console.error('Error fetching prices:', error);
-            return;
-        }
+  // ========================================
+  // ADD PRICE (MALE)
+  // ========================================
+  const maleForm = document.getElementById("important-form");
 
-        renderPriceList(data || [], '.dat', 'Male');
-        renderPriceList(data || [], '.dats', 'Female');
-    }
+  if (maleForm) {
+    maleForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    function renderMessageList(messages) {
-        const result = document.querySelector('.datam');
-        if (!result) {
-            console.error('Table body not found for messages');
-            return;
-        }
+      const clothType = document.getElementById("idk").value.trim();
+      const ironingPrice = document.getElementById("price-ironing").value.trim();
+      const washingPrice = document.getElementById("price-washing").value.trim();
 
-        result.innerHTML = messages.length > 0
-            ? messages.map((message) => `
-                <tr>
-                    <td>${message.name}</td>
-                    <td>${message.email}</td>
-                    <td>${message.message}</td>
-                    <td>${message.created_at ? new Date(message.created_at).toLocaleString() : '-'}</td>
-                    <td><button class="delete-message" data-id="${message.id}">Delete</button></td>
-                </tr>
-            `).join('')
-            : '<tr><td colspan="5">No messages found.</td></tr>';
-    }
+      if (!clothType || !ironingPrice || !washingPrice) return;
 
-    async function fetchMessages() {
-        const { data, error } = await client.from('messages').select('*').order('id', { ascending: false });
-        if (error) {
-            console.error('Error fetching messages:', error);
-            return;
-        }
-
-        renderMessageList(data || []);
-    }
-
-    const maleForm = document.getElementById('important-form');
-    const femaleForm = document.getElementById('important');
-
-    if (maleForm) {
-        maleForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const clothType = document.getElementById('idk').value.trim();
-            const ironingPrice = document.getElementById('price-ironing').value.trim();
-            const washingPrice = document.getElementById('price-washing').value.trim();
-            const isMale = document.getElementById('male').checked;
-
-            if (!clothType || !ironingPrice || !washingPrice || !isMale) return;
-
-            const { error } = await client.from('prices').insert({
-                cloth_type: clothType,
-                ironing_price: ironingPrice,
-                washing_price: washingPrice,
-                gender: 'Male',
-            });
-
-            if (error) {
-                console.error('Error adding male price:', error);
-                return;
-            }
-
-            maleForm.reset();
-            fetchPrices();
+      try {
+        await fetch(`${apiUrl}/prices`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            clothType,
+            ironingPrice,
+            washingPrice,
+            gender: "Male",
+          }),
         });
-    }
 
-    if (femaleForm) {
-        femaleForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const clothType = document.getElementById('idkk').value.trim();
-            const ironingPrice = document.getElementById('ironing').value.trim();
-            const washingPrice = document.getElementById('washing').value.trim();
-            const isFemale = document.getElementById('females').checked;
+        maleForm.reset();
+        fetchPrices();
 
-            if (!clothType || !ironingPrice || !washingPrice || !isFemale) return;
-
-            const { error } = await client.from('prices').insert({
-                cloth_type: clothType,
-                ironing_price: ironingPrice,
-                washing_price: washingPrice,
-                gender: 'Female',
-            });
-
-            if (error) {
-                console.error('Error adding female price:', error);
-                return;
-            }
-
-            femaleForm.reset();
-            fetchPrices();
-        });
-    }
-
-    const clearMaleButton = document.getElementById('clear');
-    const clearFemaleButton = document.getElementById('dear');
-    const clearMessagesButton = document.getElementById('delete');
-
-    if (clearMaleButton) {
-        clearMaleButton.addEventListener('click', async () => {
-            const { error } = await client.from('prices').delete().eq('gender', 'Male');
-            if (error) {
-                console.error('Error clearing male prices:', error);
-                return;
-            }
-            renderPriceList([], '.dat', 'Male');
-        });
-    }
-
-    if (clearFemaleButton) {
-        clearFemaleButton.addEventListener('click', async () => {
-            const { error } = await client.from('prices').delete().eq('gender', 'Female');
-            if (error) {
-                console.error('Error clearing female prices:', error);
-                return;
-            }
-            renderPriceList([], '.dats', 'Female');
-        });
-    }
-
-    if (clearMessagesButton) {
-        clearMessagesButton.addEventListener('click', async () => {
-            const { error } = await client.from('messages').delete().gt('id', 0);
-            if (error) {
-                console.error('Error clearing messages:', error);
-                return;
-            }
-            renderMessageList([]);
-        });
-    }
-
-    const maleTable = document.querySelector('.dat');
-    if (maleTable) {
-        maleTable.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('delete') && e.target.dataset.gender === 'Male') {
-                const id = Number(e.target.dataset.id);
-                const { error } = await client.from('prices').delete().eq('id', id);
-                if (error) {
-                    console.error('Error deleting male price:', error);
-                    return;
-                }
-                fetchPrices();
-            }
-        });
-    }
-
-    const femaleTable = document.querySelector('.dats');
-    if (femaleTable) {
-        femaleTable.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('delete') && e.target.dataset.gender === 'Female') {
-                const id = Number(e.target.dataset.id);
-                const { error } = await client.from('prices').delete().eq('id', id);
-                if (error) {
-                    console.error('Error deleting female price:', error);
-                    return;
-                }
-                fetchPrices();
-            }
-        });
-    }
-
-    const messagesTable = document.querySelector('.datam');
-    if (messagesTable) {
-        messagesTable.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('delete-message')) {
-                const id = Number(e.target.dataset.id);
-                const { error } = await client.from('messages').delete().eq('id', id);
-                if (error) {
-                    console.error('Error deleting message:', error);
-                    return;
-                }
-                fetchMessages();
-            }
-        });
-    }
-
-    const logoutButtons = document.querySelectorAll('#logout, #log');
-    logoutButtons.forEach((button) => {
-        button.addEventListener('click', async () => {
-            await client.auth.signOut();
-            window.location.href = 'login.html';
-        });
+      } catch (error) {
+        console.error("Error adding male price:", error);
+      }
     });
+  }
 
-    await checkAuthentication();
-    fetchPrices();
-    fetchMessages();
-    setInterval(fetchPrices, 5000);
-    setInterval(fetchMessages, 5000);
+
+  // ========================================
+  // ADD PRICE (FEMALE)
+  // ========================================
+  const femaleForm = document.getElementById("important");
+
+  if (femaleForm) {
+    femaleForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const clothType = document.getElementById("idkk").value.trim();
+      const ironingPrice = document.getElementById("ironing").value.trim();
+      const washingPrice = document.getElementById("washing").value.trim();
+
+      if (!clothType || !ironingPrice || !washingPrice) return;
+
+      try {
+        await fetch(`${apiUrl}/prices`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            clothType,
+            ironingPrice,
+            washingPrice,
+            gender: "Female",
+          }),
+        });
+
+        femaleForm.reset();
+        fetchPrices();
+
+      } catch (error) {
+        console.error("Error adding female price:", error);
+      }
+    });
+  }
+
+
+  // ========================================
+  // DELETE PRICE (EVENT DELEGATION)
+  // ========================================
+  document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("delete-price")) return;
+
+    const id = e.target.dataset.id;
+
+    try {
+      await fetch(`${apiUrl}/prices/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+
+      fetchPrices();
+
+    } catch (error) {
+      console.error("Error deleting price:", error);
+    }
+  });
+
+
+  // ========================================
+  // MESSAGES
+  // ========================================
+  function renderMessages(messages) {
+    const tableBody = document.querySelector(".datam");
+    if (!tableBody) return;
+
+    if (messages.length === 0) {
+      tableBody.innerHTML =
+        `<tr><td colspan="5">No messages found.</td></tr>`;
+      return;
+    }
+
+    tableBody.innerHTML = messages.map(msg => `
+      <tr>
+        <td>${msg.name}</td>
+        <td>${msg.email}</td>
+        <td>${msg.message}</td>
+        <td>${msg.created_at ? new Date(msg.created_at).toLocaleString() : "-"}</td>
+        <td>
+          <button class="delete-message" data-id="${msg.id}">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  async function fetchMessages() {
+    try {
+      const response = await fetch(`${apiUrl}/messages`, {
+        credentials: "include"
+      });
+
+      const data = await response.json();
+      renderMessages(data);
+
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  }
+
+  fetchMessages();
+
+
+  // ========================================
+  // DELETE MESSAGE
+  // ========================================
+  document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("delete-message")) return;
+
+    const id = e.target.dataset.id;
+
+    try {
+      await fetch(`${apiUrl}/messages/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+
+      fetchMessages();
+
+    } catch (error) {
+      console.error("Error deleting message:", error);
+    }
+  });
+
 });
