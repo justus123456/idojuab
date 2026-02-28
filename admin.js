@@ -245,4 +245,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchPrices();
     fetchMessages();
     setInterval(fetchPrices, 5000);
+    setInterval(fetchMessages, 5000);
 });
