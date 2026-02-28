@@ -16,8 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const email = document.getElementById('email').value.trim();
+        const username = document.getElementById('username').value.trim();
         const passwordValue = password.value;
+        const email = username.includes('@') ? username : `${username}@idojuan.local`;
 
         const { error } = await window.supabaseClient.auth.signInWithPassword({
             email,
