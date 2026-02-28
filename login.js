@@ -18,7 +18,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const username = document.getElementById('username').value.trim();
         const passwordValue = password.value;
-        const email = username.includes('@') ? username : `${username}@idojuan.local`;
+        let email = username;
+
+        if (!username.includes('@')) {
+            const { data: userRow, error: userLookupError } = await window.supabaseClient
+                .from('users')
+                .select('email')
+                .eq('username', username)
+                .limit(1)
+                .maybeSingle();
+
+            if (userLookupError) {
+                errorMessage.textContent = 'Username lookup failed. Ensure users.email exists and is readable by policy.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (!userRow?.email) {
+                errorMessage.textContent = 'User not found or email is missing for this username.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            email = userRow.email;
+        }
 
         const { error } = await window.supabaseClient.auth.signInWithPassword({
             email,
