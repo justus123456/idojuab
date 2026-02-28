@@ -19,10 +19,8 @@ const preLoad = document.querySelector('.preloader');
 const body = document.querySelector('body');
 
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (body) body.style.overflowY = 'scroll';
-        if (preLoad) preLoad.classList.add('fadeOut');
-    }, 3000);
+    if (body) body.style.overflowY = 'scroll';
+    if (preLoad) preLoad.classList.add('fadeOut');
 });
 
 document.addEventListener('DOMContentLoaded', () => {
