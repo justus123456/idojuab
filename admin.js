@@ -1,14 +1,4 @@
 // ========================================
-// API URL SETUP
-// ========================================
-const apiUrl =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? "http://localhost:3000"
-    : window.location.origin;
-
-
-// ========================================
 // STICKY HEADER + LOGOUT ICON TOGGLE
 // ========================================
 window.addEventListener("scroll", () => {
@@ -36,15 +26,18 @@ window.addEventListener("scroll", () => {
 document.addEventListener("DOMContentLoaded", () => {
 
   // ========================================
-  // AUTH CHECK
+  // AUTH CHECK (Supabase)
   // ========================================
   async function checkAuthentication() {
-    try {
-      const response = await fetch(`${apiUrl}/auth/check`, {
-        credentials: "include",
-      });
+    if (!window.supabaseClient) {
+      window.location.href = "/login.html";
+      return;
+    }
 
-      if (!response.ok) {
+    try {
+      const { data: { session } } = await window.supabaseClient.auth.getSession();
+
+      if (!session) {
         window.location.href = "/login.html";
       }
     } catch (error) {
@@ -56,20 +49,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================
-  // LOGOUT FUNCTION
+  // LOGOUT FUNCTION (Supabase)
   // ========================================
   async function logoutUser(e) {
     if (e) e.preventDefault();
 
     try {
-      await fetch(`${apiUrl}/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-
+      if (window.supabaseClient) {
+        await window.supabaseClient.auth.signOut();
+      }
       window.location.href = "/login.html";
     } catch (error) {
       console.error("Logout failed:", error);
+      window.location.href = "/login.html";
     }
   }
 
@@ -98,13 +90,13 @@ document.addEventListener("DOMContentLoaded", () => {
     tableBody.innerHTML = filtered.map((item, index) => `
       <tr>
         <td>${index + 1}</td>
-        <td>${item.cloth_type ?? item.clothType ?? "N/A"}</td>
-        <td>₦ ${item.ironing_price ?? item.ironingPrice ?? "N/A"}</td>
-        <td>₦ ${item.washing_price ?? item.washingPrice ?? "N/A"}</td>
+        <td>${item.cloth_type ?? "N/A"}</td>
+        <td>₦ ${item.ironing_price ?? "N/A"}</td>
+        <td>₦ ${item.washing_price ?? "N/A"}</td>
         <td>${item.gender}</td>
         <td>
-          <button class="delete-price" 
-                  data-id="${item.id}" 
+          <button class="delete-price"
+                  data-id="${item.id}"
                   data-gender="${item.gender}">
             Delete
           </button>
@@ -115,18 +107,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================
-  // FETCH PRICES
+  // FETCH PRICES (Supabase)
   // ========================================
   async function fetchPrices() {
+    if (!window.supabaseClient) return;
+
     try {
-      const response = await fetch(`${apiUrl}/prices`, {
-        credentials: "include"
-      });
+      const { data, error } = await window.supabaseClient
+        .from("prices")
+        .select("*")
+        .order("id", { ascending: true });
 
-      const data = await response.json();
+      if (error) {
+        console.error("Error fetching prices:", error);
+        return;
+      }
 
-      renderPriceList(data, ".dat", "Male");
-      renderPriceList(data, ".dats", "Female");
+      renderPriceList(data || [], ".dat", "Male");
+      renderPriceList(data || [], ".dats", "Female");
 
     } catch (error) {
       console.error("Error fetching prices:", error);
@@ -137,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================
-  // ADD PRICE (MALE)
+  // ADD PRICE (MALE) - Supabase
   // ========================================
   const maleForm = document.getElementById("important-form");
 
@@ -150,19 +148,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const washingPrice = document.getElementById("price-washing").value.trim();
 
       if (!clothType || !ironingPrice || !washingPrice) return;
+      if (!window.supabaseClient) return;
 
       try {
-        await fetch(`${apiUrl}/prices`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            clothType,
-            ironingPrice,
-            washingPrice,
+        const { error } = await window.supabaseClient
+          .from("prices")
+          .insert({
+            cloth_type: clothType,
+            ironing_price: ironingPrice,
+            washing_price: washingPrice,
             gender: "Male",
-          }),
-        });
+          });
+
+        if (error) {
+          console.error("Error adding male price:", error);
+          return;
+        }
 
         maleForm.reset();
         fetchPrices();
@@ -175,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================
-  // ADD PRICE (FEMALE)
+  // ADD PRICE (FEMALE) - Supabase
   // ========================================
   const femaleForm = document.getElementById("important");
 
@@ -188,19 +189,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const washingPrice = document.getElementById("washing").value.trim();
 
       if (!clothType || !ironingPrice || !washingPrice) return;
+      if (!window.supabaseClient) return;
 
       try {
-        await fetch(`${apiUrl}/prices`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            clothType,
-            ironingPrice,
-            washingPrice,
+        const { error } = await window.supabaseClient
+          .from("prices")
+          .insert({
+            cloth_type: clothType,
+            ironing_price: ironingPrice,
+            washing_price: washingPrice,
             gender: "Female",
-          }),
-        });
+          });
+
+        if (error) {
+          console.error("Error adding female price:", error);
+          return;
+        }
 
         femaleForm.reset();
         fetchPrices();
@@ -213,18 +217,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================
-  // DELETE PRICE (EVENT DELEGATION)
+  // DELETE PRICE (Supabase)
   // ========================================
   document.addEventListener("click", async (e) => {
     if (!e.target.classList.contains("delete-price")) return;
+    if (!window.supabaseClient) return;
 
     const id = e.target.dataset.id;
 
     try {
-      await fetch(`${apiUrl}/prices/${id}`, {
-        method: "DELETE",
-        credentials: "include"
-      });
+      const { error } = await window.supabaseClient
+        .from("prices")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error deleting price:", error);
+        return;
+      }
 
       fetchPrices();
 
@@ -235,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================
-  // MESSAGES
+  // MESSAGES (Supabase)
   // ========================================
   function renderMessages(messages) {
     const tableBody = document.querySelector(".datam");
@@ -263,13 +273,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function fetchMessages() {
-    try {
-      const response = await fetch(`${apiUrl}/messages`, {
-        credentials: "include"
-      });
+    if (!window.supabaseClient) return;
 
-      const data = await response.json();
-      renderMessages(data);
+    try {
+      const { data, error } = await window.supabaseClient
+        .from("messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return;
+      }
+
+      renderMessages(data || []);
 
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -280,18 +297,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================
-  // DELETE MESSAGE
+  // DELETE MESSAGE (Supabase)
   // ========================================
   document.addEventListener("click", async (e) => {
     if (!e.target.classList.contains("delete-message")) return;
+    if (!window.supabaseClient) return;
 
     const id = e.target.dataset.id;
 
     try {
-      await fetch(`${apiUrl}/messages/${id}`, {
-        method: "DELETE",
-        credentials: "include"
-      });
+      const { error } = await window.supabaseClient
+        .from("messages")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error deleting message:", error);
+        return;
+      }
 
       fetchMessages();
 
