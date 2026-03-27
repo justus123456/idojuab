@@ -21,11 +21,6 @@ window.addEventListener('load', () => {
     }, 3000);
 });
 
-// Determine API URL based on environment
-const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000'
-    : window.location.origin; // Use same origin for production
-
 document.addEventListener('DOMContentLoaded', () => {
     // Function to render the price list
     function renderPriceList(prices, tableBodyClass, gender) {
@@ -36,9 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? filteredPrices.map((item, index) => `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${item.clothType}</td>
-                        <td><span id="line">₦</span> ${item.ironingPrice || 'N/A'}</td>
-                        <td><span id="line">₦</span> ${item.washingPrice || 'N/A'}</td>
+                        <td>${item.cloth_type || item.clothType}</td>
+                        <td><span id="line">₦</span> ${item.ironing_price || item.ironingPrice || 'N/A'}</td>
+                        <td><span id="line">₦</span> ${item.washing_price || item.washingPrice || 'N/A'}</td>
                         <td>${item.gender}</td>
                     </tr>
                 `).join('')
@@ -49,19 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function poll() {
-        fetch(`${apiUrl}/prices`)
-            .then(response => response.json())
-            .then(data => {
-                // supabase returns snake_case fields; normalize to camelCase so renderPriceList can use consistent property names
-                const normalized = data.map(item => ({
-                    id: item.id,
-                    gender: item.gender,
-                    clothType: item.cloth_type || item.clothType,
-                    ironingPrice: item.ironing_price || item.ironingPrice,
-                    washingPrice: item.washing_price || item.washingPrice,
-                }));
-                renderPriceList(normalized, '.dat', 'Male');   // Render male prices
-                renderPriceList(normalized, '.datd', 'Female'); // Render female prices
+        if (!window.supabaseClient) {
+            console.error('Supabase client not available for polling prices.');
+            return;
+        }
+
+        window.supabaseClient
+            .from('prices')
+            .select('*')
+            .order('id', { ascending: true })
+            .then(({ data, error }) => {
+                if (error) {
+                    console.error('Error fetching prices:', error);
+                    return;
+                }
+                renderPriceList(data || [], '.dat', 'Male');
+                renderPriceList(data || [], '.datd', 'Female');
             })
             .catch(error => console.error('Error fetching prices:', error));
     }
@@ -89,13 +87,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const message = messageInput.value.trim();
 
                 if (name && email && message) {
-                    fetch(`${apiUrl}/messages`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, email, message })
-                    })
-                        .then(response => response.json())
-                        .then(() => {
+                    if (!window.supabaseClient) {
+                        console.error('Supabase client not available.');
+                        return;
+                    }
+
+                    window.supabaseClient
+                        .from('messages')
+                        .insert({ name, email, message })
+                        .then(({ error }) => {
+                            if (error) {
+                                console.error('Error submitting message:', error);
+                                return;
+                            }
                             nameInput.value = '';
                             emailInput.value = '';
                             messageInput.value = '';
