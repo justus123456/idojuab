@@ -32,69 +32,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (!window.ADMIN_SIGNUP_CODE || window.ADMIN_SIGNUP_CODE === "CHANGE_THIS_ADMIN_CODE") {
-      showMessage("Admin signup code is not configured yet.", true);
-      return;
+    // Call server-side admin signup endpoint
+    try {
+      const response = await fetch('/admin-signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          adminCode,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        showMessage(result.error || 'Signup failed.', true);
+        return;
+      }
+
+      form.reset();
+      showMessage(result.message || 'Admin account created successfully.');
+    } catch (error) {
+      showMessage('Network error. Please try again.', true);
     }
-
-    if (adminCode !== window.ADMIN_SIGNUP_CODE) {
-      showMessage("Invalid admin code.", true);
-      return;
-    }
-
-    const { data: existingUser, error: lookupError } = await client
-      .from("users")
-      .select("id")
-      .or(`username.eq.${username},email.eq.${email}`)
-      .limit(1)
-      .maybeSingle();
-
-    if (lookupError) {
-      showMessage(lookupError.message, true);
-      return;
-    }
-
-    if (existingUser) {
-      showMessage("That username or email already exists.", true);
-      return;
-    }
-
-    const isolatedClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-        storageKey: `signup-${Date.now()}`,
-      },
-    });
-
-    const { data: signUpData, error: signUpError } = await isolatedClient.auth.signUp({
-      email,
-      password,
-    });
-
-    if (signUpError) {
-      showMessage(signUpError.message || "Unable to create the new admin account.", true);
-      return;
-    }
-
-    const { error: profileError } = await client.from("users").insert({
-      username,
-      email,
-      password_hash: "",
-      role: "admin",
-    });
-
-    if (profileError) {
-      showMessage(profileError.message || "Auth user created, but profile insert failed.", true);
-      return;
-    }
-
-    form.reset();
-    showMessage(
-      signUpData.user?.identities?.length
-        ? "Admin account created successfully. You can now log in."
-        : "Account created. Check the email inbox if Supabase asks for confirmation."
-    );
   });
 });

@@ -182,6 +182,69 @@ app.get('/auth/check', (req, res) => {
   }
 });
 
+// Admin signup endpoint
+app.post('/admin-signup', async (req, res) => {
+  try {
+    const { username, email, password, adminCode } = req.body;
+
+    if (!username || !email || !password || !adminCode) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Check admin code from environment
+    const expectedCode = process.env.ADMIN_SIGNUP_CODE;
+    if (!expectedCode || adminCode !== expectedCode) {
+      return res.status(403).json({ error: 'Invalid admin code' });
+    }
+
+    // Check if user already exists
+    const { data: existingUser, error: lookupError } = await supabase
+      .from('users')
+      .select('id')
+      .or(`username.eq.${username},email.eq.${email}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (lookupError) {
+      return res.status(500).json({ error: lookupError.message });
+    }
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Username or email already exists' });
+    }
+
+    // Create Supabase auth user
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (signUpError) {
+      return res.status(500).json({ error: signUpError.message });
+    }
+
+    // Insert into users table
+    const { error: profileError } = await supabase.from('users').insert({
+      username,
+      email,
+      password_hash: '',
+      role: 'admin',
+    });
+
+    if (profileError) {
+      return res.status(500).json({ error: profileError.message });
+    }
+
+    res.status(201).json({
+      message: signUpData.user?.identities?.length
+        ? 'Admin account created successfully. You can now log in.'
+        : 'Account created. Check email if Supabase requires confirmation.'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start server
 const server = app.listen(port, () => {
   console.log('=================================');

@@ -1,1 +1,1 @@
-window.ADMIN_SIGNUP_CODE = "admin-123";
+// Admin signup code is now handled server-side via environment variables
