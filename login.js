@@ -13,6 +13,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    async function getAdminProfile(identifier) {
+        const client = window.supabaseClient;
+        const isEmail = identifier.includes('@');
+        const field = isEmail ? 'email' : 'username';
+        const value = isEmail ? identifier.toLowerCase() : identifier;
+
+        const { data, error } = await client
+            .from('users')
+            .select('id, username, email, role')
+            .eq(field, value)
+            .limit(1)
+            .maybeSingle();
+
+        return { data, error };
+    }
+
     // Check if this is a password reset callback
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
@@ -36,43 +52,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const username = document.getElementById('username').value.trim();
             const passwordValue = password.value;
-            let email = username;
+            const { data: adminProfile, error: profileError } = await getAdminProfile(username);
 
-            if (!username.includes('@')) {
-                const { data: userRow, error: userLookupError } = await window.supabaseClient
-                    .from('users')
-                    .select('email')
-                    .eq('username', username)
-                    .limit(1)
-                    .maybeSingle();
-
-                if (userLookupError) {
-                    errorMessage.textContent = 'Username lookup failed. Ensure users.email exists and is readable by policy.';
-                    errorMessage.style.display = 'block';
-                    return;
-                }
-
-                if (!userRow?.email) {
-                    errorMessage.textContent = 'User not found or email is missing for this username.';
-                    errorMessage.style.display = 'block';
-                    return;
-                }
-
-                email = userRow.email;
+            if (profileError) {
+                errorMessage.textContent = 'Username lookup failed. Check your Supabase users table policy.';
+                errorMessage.style.display = 'block';
+                return;
             }
 
-            const response = await fetch('/login', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password: passwordValue })
+            if (!adminProfile?.email) {
+                errorMessage.textContent = 'User not found or email is missing for this username.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            const { error: signInError } = await window.supabaseClient.auth.signInWithPassword({
+                email: adminProfile.email,
+                password: passwordValue
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                errorMessage.textContent = errorData.error || 'Invalid credentials. Please try again.';
+            if (signInError) {
+                errorMessage.textContent = signInError.message || 'Invalid credentials. Please try again.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (adminProfile.role !== 'admin') {
+                await window.supabaseClient.auth.signOut();
+                errorMessage.textContent = 'Admin access required.';
                 errorMessage.style.display = 'block';
                 return;
             }
@@ -95,26 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 event.preventDefault();
 
                 const username = document.getElementById('username').value.trim();
-                let email = username;
+                const { data: adminProfile, error: profileError } = await getAdminProfile(username);
 
-                if (!username.includes('@')) {
-                    const { data: userRow, error: userLookupError } = await window.supabaseClient
-                        .from('users')
-                        .select('email')
-                        .eq('username', username)
-                        .limit(1)
-                        .maybeSingle();
-
-                    if (userLookupError || !userRow?.email) {
-                        errorMessage.textContent = 'Enter a valid registered username or email before resetting password.';
-                        errorMessage.style.display = 'block';
-                        return;
-                    }
-
-                    email = userRow.email;
+                if (profileError || !adminProfile?.email) {
+                    errorMessage.textContent = 'Enter a valid registered username or email before resetting password.';
+                    errorMessage.style.display = 'block';
+                    return;
                 }
 
-                const { data, error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
+                const { error } = await window.supabaseClient.auth.resetPasswordForEmail(adminProfile.email, {
                     redirectTo: window.location.origin + '/login.html',
                 });
 
@@ -172,33 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (error) {
                 resetMessage.textContent = error.message || 'Failed to update password.';
-                resetMessage.style.color = '#b42318';
-                resetMessage.style.display = 'block';
-                return;
-            }
-
-            const { data: sessionData, error: sessionError } = await window.supabaseClient.auth.getSession();
-            const accessToken = sessionData?.session?.access_token;
-
-            if (sessionError || !accessToken) {
-                resetMessage.textContent = 'Password changed, but we could not finalize app login setup. Please request a new reset link and try again.';
-                resetMessage.style.color = '#b42318';
-                resetMessage.style.display = 'block';
-                return;
-            }
-
-            const syncResponse = await fetch('/auth/sync-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({ password: newPwd })
-            });
-
-            if (!syncResponse.ok) {
-                const syncError = await syncResponse.json().catch(() => ({}));
-                resetMessage.textContent = syncError.error || 'Password changed, but app login is still out of sync. Please request a new reset link and try again.';
                 resetMessage.style.color = '#b42318';
                 resetMessage.style.display = 'block';
                 return;
