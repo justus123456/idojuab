@@ -94,71 +94,85 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function requireAdmin() {
-    const {
-      data: { session },
-    } = await client.auth.getSession();
+    try {
+      const response = await fetch('/auth/check', {
+        method: 'GET',
+        credentials: 'include',
+      });
 
-    if (!session?.user?.email) {
-      window.location.href = "login.html";
+      if (!response.ok) {
+        window.location.href = 'login.html';
+        return null;
+      }
+
+      const body = await response.json();
+      if (!body.user || body.user.role !== 'admin') {
+        window.location.href = 'login.html';
+        return null;
+      }
+
+      return body.user;
+    } catch (error) {
+      console.error('Admin auth error:', error);
+      window.location.href = 'login.html';
       return null;
     }
-
-    const { data: userRow, error } = await client
-      .from("users")
-      .select("id, username, email, role")
-      .eq("email", session.user.email)
-      .limit(1)
-      .maybeSingle();
-
-    if (error || !userRow || userRow.role !== "admin") {
-      await client.auth.signOut();
-      window.location.href = "login.html";
-      return null;
-    }
-
-    return userRow;
   }
 
   async function fetchPrices() {
-    const { data, error } = await client
-      .from("prices")
-      .select("*")
-      .order("id", { ascending: true });
+    try {
+      const response = await fetch('/prices', { credentials: 'include' });
+      if (!response.ok) {
+        console.error("Error fetching prices:", response.statusText);
+        return;
+      }
 
-    if (error) {
+      const data = await response.json();
+      const normalized = data.map(normalizePrice);
+      renderPriceList(normalized, ".dat", "Male");
+      renderPriceList(normalized, ".dats", "Female");
+    } catch (error) {
       console.error("Error fetching prices:", error);
-      return;
     }
-
-    const normalized = data.map(normalizePrice);
-    renderPriceList(normalized, ".dat", "Male");
-    renderPriceList(normalized, ".dats", "Female");
   }
 
   async function fetchMessages() {
-    const { data, error } = await client
-      .from("messages")
-      .select("*")
-      .order("id", { ascending: false });
+    try {
+      const response = await fetch('/messages', {
+        credentials: 'include'
+      });
 
-    if (error) {
+      if (!response.ok) {
+        console.error("Error fetching messages:", response.statusText);
+        return;
+      }
+
+      const data = await response.json();
+      renderMessages(data);
+    } catch (error) {
       console.error("Error fetching messages:", error);
-      return;
     }
-
-    renderMessages(data);
   }
 
   async function logoutUser(event) {
     if (event) event.preventDefault();
 
-    const { error } = await client.auth.signOut();
-    if (error) {
-      console.error("Logout failed:", error);
-      return;
-    }
+    try {
+      const response = await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
 
-    window.location.href = "login.html";
+      if (!response.ok) {
+        const err = await response.json();
+        console.error('Logout failed:', err);
+        return;
+      }
+
+      window.location.href = 'login.html';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   }
 
   const adminUser = await requireAdmin();
@@ -183,20 +197,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (!clothType || !ironingPrice || !washingPrice) return;
 
-      const { error } = await client.from("prices").insert({
-        cloth_type: clothType,
-        ironing_price: Number(ironingPrice),
-        washing_price: Number(washingPrice),
-        gender: "Male",
-      });
+      try {
+        const response = await fetch('/prices', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            clothType,
+            ironingPrice: Number(ironingPrice),
+            washingPrice: Number(washingPrice),
+            gender: "Male"
+          })
+        });
 
-      if (error) {
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Error adding male price:", error);
+          return;
+        }
+
+        maleForm.reset();
+        fetchPrices();
+      } catch (error) {
         console.error("Error adding male price:", error);
-        return;
       }
-
-      maleForm.reset();
-      fetchPrices();
     });
   }
 
@@ -211,79 +237,141 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (!clothType || !ironingPrice || !washingPrice) return;
 
-      const { error } = await client.from("prices").insert({
-        cloth_type: clothType,
-        ironing_price: Number(ironingPrice),
-        washing_price: Number(washingPrice),
-        gender: "Female",
-      });
+      try {
+        const response = await fetch('/prices', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            clothType,
+            ironingPrice: Number(ironingPrice),
+            washingPrice: Number(washingPrice),
+            gender: "Female"
+          })
+        });
 
-      if (error) {
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Error adding female price:", error);
+          return;
+        }
+
+        femaleForm.reset();
+        fetchPrices();
+      } catch (error) {
         console.error("Error adding female price:", error);
-        return;
       }
-
-      femaleForm.reset();
-      fetchPrices();
     });
   }
 
   document.addEventListener("click", async (event) => {
     const priceButton = event.target.closest(".delete-price");
     if (priceButton) {
-      const { error } = await client.from("prices").delete().eq("id", Number(priceButton.dataset.id));
-      if (error) {
+      try {
+        const response = await fetch(`/prices/${priceButton.dataset.id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Error deleting price:", error);
+          return;
+        }
+
+        fetchPrices();
+      } catch (error) {
         console.error("Error deleting price:", error);
-        return;
       }
-      fetchPrices();
       return;
     }
 
     const messageButton = event.target.closest(".delete-message");
     if (messageButton) {
-      const { error } = await client.from("messages").delete().eq("id", Number(messageButton.dataset.id));
-      if (error) {
+      try {
+        const response = await fetch(`/messages/${messageButton.dataset.id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Error deleting message:", error);
+          return;
+        }
+
+        fetchMessages();
+      } catch (error) {
         console.error("Error deleting message:", error);
-        return;
       }
-      fetchMessages();
     }
   });
 
   const clearMaleButton = document.getElementById("clear");
   if (clearMaleButton) {
     clearMaleButton.addEventListener("click", async () => {
-      const { error } = await client.from("prices").delete().eq("gender", "Male");
-      if (error) {
+      try {
+        const response = await fetch('/prices?gender=Male', {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Error clearing male prices:", error);
+          return;
+        }
+
+        fetchPrices();
+      } catch (error) {
         console.error("Error clearing male prices:", error);
-        return;
       }
-      fetchPrices();
     });
   }
 
   const clearFemaleButton = document.getElementById("dear");
   if (clearFemaleButton) {
     clearFemaleButton.addEventListener("click", async () => {
-      const { error } = await client.from("prices").delete().eq("gender", "Female");
-      if (error) {
+      try {
+        const response = await fetch('/prices?gender=Female', {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Error clearing female prices:", error);
+          return;
+        }
+
+        fetchPrices();
+      } catch (error) {
         console.error("Error clearing female prices:", error);
-        return;
       }
-      fetchPrices();
     });
   }
 
   const clearMessagesButton = document.getElementById("delete");
   if (clearMessagesButton) {
     clearMessagesButton.addEventListener("click", async () => {
-      const { error } = await client.from("messages").delete().gt("id", 0);
-      if (error) {
+      try {
+        const response = await fetch('/messages', {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Error clearing messages:", error);
+          return;
+        }
+
+        fetchMessages();
+      } catch (error) {
         console.error("Error clearing messages:", error);
-        return;
       }
-      fetchMessages();
     });
   }
 

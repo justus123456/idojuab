@@ -17,10 +17,66 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+// Security middleware
+const requireAuth = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ error: 'Not authenticated' });
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+const requireAdmin = (req, res, next) => {
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
+// CORS configuration
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static(__dirname));
 app.use(cookieParser());
+
+// Rate limiting
+// const generalLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limit each IP to 100 requests per windowMs
+//   message: 'Too many requests from this IP, please try again later.'
+// });
+
+// const loginLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // Limit each IP to 5 login attempts per windowMs
+//   skipSuccessfulRequests: true, // Don't count successful logins
+//   message: 'Too many login attempts, please try again later.'
+// });
+
+// const messageLimiter = rateLimit({
+//   windowMs: 60 * 60 * 1000, // 1 hour
+//   max: 10, // Limit each IP to 10 messages per hour
+//   message: 'Too many messages from this IP, please try again later.'
+// });
+
+// const adminSignupLimiter = rateLimit({
+//   windowMs: 60 * 60 * 1000, // 1 hour
+//   max: 3, // Limit each IP to 3 admin signup attempts per hour
+//   message: 'Too many signup attempts, please try again later.'
+// });
+
+// Apply rate limiting
+// app.use(generalLimiter);
 
 // Helpers
 const hashPassword = async (password) => {
@@ -29,6 +85,9 @@ const hashPassword = async (password) => {
 };
 
 const checkPassword = async (password, hash) => {
+  if (!hash) {
+    return false;
+  }
   return bcrypt.compare(password, hash);
 };
 
@@ -45,7 +104,7 @@ app.get('/prices', async (req, res) => {
   }
 });
 
-app.post('/prices', async (req, res) => {
+app.post('/prices', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { clothType, ironingPrice, washingPrice, gender } = req.body;
     const payload = {
@@ -62,7 +121,7 @@ app.post('/prices', async (req, res) => {
   }
 });
 
-app.delete('/prices/:id', async (req, res) => {
+app.delete('/prices/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { data, error } = await supabase.from('prices').delete().eq('id', id).select();
@@ -73,7 +132,7 @@ app.delete('/prices/:id', async (req, res) => {
   }
 });
 
-app.delete('/prices', async (req, res) => {
+app.delete('/prices', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { gender } = req.query;
     if (!gender) return res.status(400).json({ error: 'Gender parameter is required for clearing prices.' });
@@ -86,46 +145,67 @@ app.delete('/prices', async (req, res) => {
 });
 
 // Messages
-app.get('/messages', async (req, res) => {
+app.get('/messages', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { data, error } = await supabase.from('messages').select('*').order('id', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) return res.status(500).json({ error: 'Failed to fetch messages' });
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.post('/messages', async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    let { name, email, message } = req.body;
+    
+    // Basic input validation and sanitization
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    // Trim and basic sanitization (remove potential script tags)
+    name = name.trim().replace(/<[^>]*>/g, '').substring(0, 100);
+    message = message.trim().replace(/<[^>]*>/g, '').substring(0, 1000);
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    
+    // Length validation
+    if (name.length < 2 || message.length < 5) {
+      return res.status(400).json({ error: 'Name or message too short' });
+    }
+    
     const { data, error } = await supabase.from('messages').insert({ name, email, message }).select().single();
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) return res.status(500).json({ error: 'Failed to save message' });
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.delete('/messages/:id', async (req, res) => {
+app.delete('/messages/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { data, error } = await supabase.from('messages').delete().eq('id', id).select();
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) return res.status(500).json({ error: 'Failed to delete message' });
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Delete all messages (used by admin "Clear" button)
-app.delete('/messages', async (req, res) => {
+app.delete('/messages', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { data, error } = await supabase.from('messages').delete().neq('id', 0).select();
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) return res.status(500).json({ error: 'Failed to clear messages' });
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -149,9 +229,13 @@ app.post('/login', async (req, res) => {
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
     const { data, error } = await supabase.from('users').select('id, username, password_hash, role').eq('username', username).limit(1).single();
     if (error && error.code !== 'PGRST116') return res.status(500).json({ error: error.message });
+
     const user = data;
     if (user && await checkPassword(password, user.password_hash)) {
-      // Sign JWT and set HttpOnly cookie
+      if (user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
       const payload = { id: user.id, username: user.username, role: user.role };
       const token = jwt.sign(payload, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '8h' });
       res.cookie('token', token, { httpOnly: true, sameSite: 'lax' });
@@ -159,6 +243,48 @@ app.post('/login', async (req, res) => {
     } else {
       res.status(401).json({ error: 'Invalid credentials' });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/auth/sync-password', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const { password } = req.body;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Missing authorization token' });
+    }
+
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !authData?.user?.email) {
+      return res.status(401).json({ error: 'Invalid recovery session' });
+    }
+
+    const hashedPassword = await hashPassword(password);
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('users')
+      .update({ password_hash: hashedPassword })
+      .eq('email', authData.user.email)
+      .select('id')
+      .limit(1)
+      .maybeSingle();
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'No profile found for this recovery account' });
+    }
+
+    res.json({ message: 'Password synchronized successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -223,11 +349,12 @@ app.post('/admin-signup', async (req, res) => {
       return res.status(500).json({ error: signUpError.message });
     }
 
-    // Insert into users table
+    // Hash password and insert into users table
+    const hashedPassword = await hashPassword(password);
     const { error: profileError } = await supabase.from('users').insert({
       username,
       email,
-      password_hash: '',
+      password_hash: hashedPassword,
       role: 'admin',
     });
 

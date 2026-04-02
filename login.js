@@ -61,27 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 email = userRow.email;
             }
 
-            const { error } = await window.supabaseClient.auth.signInWithPassword({
-                email,
-                password: passwordValue,
+            const response = await fetch('/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password: passwordValue })
             });
 
-            if (error) {
-                errorMessage.textContent = error.message || 'Invalid credentials. Please try again.';
-                errorMessage.style.display = 'block';
-                return;
-            }
-
-            const { data: roleRow, error: roleError } = await window.supabaseClient
-                .from('users')
-                .select('role')
-                .eq('email', email)
-                .limit(1)
-                .maybeSingle();
-
-            if (roleError || roleRow?.role !== 'admin') {
-                await window.supabaseClient.auth.signOut();
-                errorMessage.textContent = 'This account is not allowed to access the admin page.';
+            if (!response.ok) {
+                const errorData = await response.json();
+                errorMessage.textContent = errorData.error || 'Invalid credentials. Please try again.';
                 errorMessage.style.display = 'block';
                 return;
             }
@@ -181,6 +172,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (error) {
                 resetMessage.textContent = error.message || 'Failed to update password.';
+                resetMessage.style.color = '#b42318';
+                resetMessage.style.display = 'block';
+                return;
+            }
+
+            const { data: sessionData, error: sessionError } = await window.supabaseClient.auth.getSession();
+            const accessToken = sessionData?.session?.access_token;
+
+            if (sessionError || !accessToken) {
+                resetMessage.textContent = 'Password changed, but we could not finalize app login setup. Please request a new reset link and try again.';
+                resetMessage.style.color = '#b42318';
+                resetMessage.style.display = 'block';
+                return;
+            }
+
+            const syncResponse = await fetch('/auth/sync-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({ password: newPwd })
+            });
+
+            if (!syncResponse.ok) {
+                const syncError = await syncResponse.json().catch(() => ({}));
+                resetMessage.textContent = syncError.error || 'Password changed, but app login is still out of sync. Please request a new reset link and try again.';
                 resetMessage.style.color = '#b42318';
                 resetMessage.style.display = 'block';
                 return;
