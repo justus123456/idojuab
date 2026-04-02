@@ -13,28 +13,58 @@
     <body>
         <section>
             <div class="login-container">
-                <h2>Admin Login</h2>
-                <form id="login-form">
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username"
-                            required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <div class="space">
-                            <input type="password" id="password" name="password"
+                <!-- Login Form -->
+                <div id="login-section">
+                    <h2>Admin Login</h2>
+                    <p class="helper-text">Log in to manage the admin dashboard, or create a new admin account with your admin code.</p>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username"
                                 required>
-                            <button type="button"
-                                class="btn btn-outline-primary fas fa-eye"
-                                id="show"></button>
                         </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="space">
+                                <input type="password" id="password" name="password"
+                                    required>
+                                <button type="button"
+                                    class="btn btn-outline-primary fas fa-eye"
+                                    id="show"></button>
+                            </div>
+                        </div>
+                        <button type="submit">Login</button>
+                        <p id="error-message"
+                            style="color: red; display: none;">Invalid credentials.
+                            Please try again.</p>
+                    </form>
+                    <div class="auth-links">
+                        <a href="signup.html" class="secondary-link">Create Account</a>
+                        <a href="#" id="forgot-password" class="secondary-link" style="margin-left: 1rem;">Forgot Password?</a>
                     </div>
-                    <button type="submit">Login</button>
-                    <p id="error-message"
-                        style="color: red; display: none;">Invalid credentials.
-                        Please try again.</p>
-                </form>
+                </div>
+
+                <!-- Reset Password Form -->
+                <div id="reset-section" style="display: none;">
+                    <h2>Reset Password</h2>
+                    <form id="reset-form">
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <div class="space">
+                                <input type="password" id="new-password" name="new-password" required>
+                                <button type="button" class="btn btn-outline-primary fas fa-eye" id="show-reset"></button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <div class="space">
+                                <input type="password" id="confirm-password" name="confirm-password" required>
+                            </div>
+                        </div>
+                        <button type="submit">Update Password</button>
+                        <p id="reset-message" style="display: none;"></p>
+                    </form>
+                </div>
             </div>
         </section>
         <section class="foot">
