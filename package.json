@@ -1,8 +1,5 @@
 {
   "type": "module",
-  "scripts": {
-    "build": "node scripts/generate-config.mjs"
-  },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
     "bcrypt": "^6.0.0",
