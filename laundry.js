@@ -31,6 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    function clearChildren(node) {
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
+    }
+
+    function appendCell(row, value) {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+    }
+
     function renderPriceList(prices, tableBodyClass, gender) {
         const result = document.querySelector(tableBodyClass);
         if (!result) {
@@ -39,17 +51,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const filteredPrices = prices.filter(item => item.gender === gender);
-        result.innerHTML = filteredPrices.length > 0
-            ? filteredPrices.map((item, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.clothType}</td>
-                    <td><span id="line">&#8358;</span> ${item.ironingPrice || 'N/A'}</td>
-                    <td><span id="line">&#8358;</span> ${item.washingPrice || 'N/A'}</td>
-                    <td>${item.gender}</td>
-                </tr>
-            `).join('')
-            : '<tr><td colspan="5">No items found.</td></tr>';
+        clearChildren(result);
+
+        if (filteredPrices.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 5;
+            cell.textContent = 'No items found.';
+            row.appendChild(cell);
+            result.appendChild(row);
+            return;
+        }
+
+        filteredPrices.forEach((item, index) => {
+            const row = document.createElement('tr');
+            appendCell(row, String(index + 1));
+            appendCell(row, item.clothType || 'N/A');
+            appendCell(row, `NGN ${item.ironingPrice || 'N/A'}`);
+            appendCell(row, `NGN ${item.washingPrice || 'N/A'}`);
+            appendCell(row, item.gender || 'N/A');
+            result.appendChild(row);
+        });
     }
 
     async function poll() {
@@ -101,16 +123,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (nameInput && emailInput && messageInput && successMessage) {
             const name = nameInput.value.trim();
-            const email = emailInput.value.trim();
+            const email = emailInput.value.trim().toLowerCase();
             const message = messageInput.value.trim();
 
             if (name && email && message) {
-                const { error } = await client
-                    .from('messages')
-                    .insert({ name, email, message });
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, message })
+                });
 
-                if (error) {
-                    console.error('Error submitting message:', error);
+                if (!response.ok) {
+                    console.error('Error submitting message');
                     return;
                 }
 

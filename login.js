@@ -13,20 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    async function getAdminProfile(identifier) {
-        const client = window.supabaseClient;
-        const isEmail = identifier.includes('@');
-        const field = isEmail ? 'email' : 'username';
-        const value = isEmail ? identifier.toLowerCase() : identifier;
+    function validatePasswordStrength(value) {
+        if (value.length < 8) {
+            return 'Password must be at least 8 characters.';
+        }
 
-        const { data, error } = await client
-            .from('users')
-            .select('id, username, email, role')
-            .eq(field, value)
-            .limit(1)
-            .maybeSingle();
+        if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
+            return 'Password must include uppercase, lowercase, number, and special character.';
+        }
 
-        return { data, error };
+        return '';
     }
 
     // Check if this is a password reset callback
@@ -50,24 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
             const passwordValue = password.value;
-            const { data: adminProfile, error: profileError } = await getAdminProfile(username);
-
-            if (profileError) {
-                errorMessage.textContent = 'Username lookup failed. Check your Supabase users table policy.';
-                errorMessage.style.display = 'block';
-                return;
-            }
-
-            if (!adminProfile?.email) {
-                errorMessage.textContent = 'User not found or email is missing for this username.';
+            if (!email) {
+                errorMessage.textContent = 'Email is required.';
                 errorMessage.style.display = 'block';
                 return;
             }
 
             const { error: signInError } = await window.supabaseClient.auth.signInWithPassword({
-                email: adminProfile.email,
+                email,
                 password: passwordValue
             });
 
@@ -77,7 +65,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (adminProfile.role !== 'admin') {
+            const { data: profileData, error: profileError } = await window.supabaseClient
+                .from('users')
+                .select('id, username, email, role')
+                .eq('email', email)
+                .limit(1)
+                .maybeSingle();
+
+            if (profileError || profileData?.role !== 'admin') {
                 await window.supabaseClient.auth.signOut();
                 errorMessage.textContent = 'Admin access required.';
                 errorMessage.style.display = 'block';
@@ -101,16 +96,15 @@ document.addEventListener('DOMContentLoaded', () => {
             forgotPasswordBtn.addEventListener('click', async (event) => {
                 event.preventDefault();
 
-                const username = document.getElementById('username').value.trim();
-                const { data: adminProfile, error: profileError } = await getAdminProfile(username);
+                const email = document.getElementById('email').value.trim().toLowerCase();
 
-                if (profileError || !adminProfile?.email) {
-                    errorMessage.textContent = 'Enter a valid registered username or email before resetting password.';
+                if (!email) {
+                    errorMessage.textContent = 'Enter the admin email before requesting a password reset.';
                     errorMessage.style.display = 'block';
                     return;
                 }
 
-                const { error } = await window.supabaseClient.auth.resetPasswordForEmail(adminProfile.email, {
+                const { error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
                     redirectTo: window.location.origin + '/login.html',
                 });
 
@@ -155,8 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (newPwd.length < 6) {
-                resetMessage.textContent = 'Password must be at least 6 characters.';
+            const passwordStrengthError = validatePasswordStrength(newPwd);
+            if (passwordStrengthError) {
+                resetMessage.textContent = passwordStrengthError;
                 resetMessage.style.color = '#b42318';
                 resetMessage.style.display = 'block';
                 return;

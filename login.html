@@ -16,11 +16,11 @@
                 <!-- Login Form -->
                 <div id="login-section">
                     <h2>Admin Login</h2>
-                    <p class="helper-text">Log in to manage the admin dashboard, or create a new admin account with your admin code.</p>
+                    <p class="helper-text">Log in with an admin email and password to manage the dashboard.</p>
                     <form id="login-form">
                         <div class="form-group">
-                            <label for="username">Username</label>
-                            <input type="text" id="username" name="username"
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email"
                                 required>
                         </div>
                         <div class="form-group">
@@ -39,8 +39,7 @@
                             Please try again.</p>
                     </form>
                     <div class="auth-links">
-                        <a href="signup.html" class="secondary-link">Create Account</a>
-                        <a href="#" id="forgot-password" class="secondary-link" style="margin-left: 1rem;">Forgot Password?</a>
+                        <a href="#" id="forgot-password" class="secondary-link">Forgot Password?</a>
                     </div>
                 </div>
 
@@ -54,6 +53,7 @@
                                 <input type="password" id="new-password" name="new-password" required>
                                 <button type="button" class="btn btn-outline-primary fas fa-eye" id="show-reset"></button>
                             </div>
+                            <small>Minimum 8 characters with uppercase, lowercase, number, and special character.</small>
                         </div>
                         <div class="form-group">
                             <label for="confirm-password">Confirm Password</label>

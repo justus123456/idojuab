@@ -34,6 +34,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
   }
 
+  function clearChildren(node) {
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  function appendCell(row, value) {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.appendChild(cell);
+    return cell;
+  }
+
+  function renderEmptyRow(tableBody, columnCount, message) {
+    clearChildren(tableBody);
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = columnCount;
+    cell.textContent = message;
+    row.appendChild(cell);
+    tableBody.appendChild(row);
+  }
+
   function renderPriceList(prices, selector, gender) {
     const tableBody = document.querySelector(selector);
     if (!tableBody) return;
@@ -41,28 +64,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     const filtered = prices.filter((item) => item.gender === gender);
 
     if (filtered.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="6">No ${gender} items found.</td></tr>`;
+      renderEmptyRow(tableBody, 6, `No ${gender} items found.`);
       return;
     }
 
-    tableBody.innerHTML = filtered
-      .map(
-        (item, index) => `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${item.clothType}</td>
-        <td>&#8358; ${item.ironingPrice}</td>
-        <td>&#8358; ${item.washingPrice}</td>
-        <td>${item.gender}</td>
-        <td>
-          <button class="delete-price" data-id="${item.id}" data-gender="${item.gender}">
-            Delete
-          </button>
-        </td>
-      </tr>
-    `
-      )
-      .join("");
+    clearChildren(tableBody);
+
+    filtered.forEach((item, index) => {
+      const row = document.createElement("tr");
+      appendCell(row, String(index + 1));
+      appendCell(row, item.clothType);
+      appendCell(row, `NGN ${item.ironingPrice}`);
+      appendCell(row, `NGN ${item.washingPrice}`);
+      appendCell(row, item.gender);
+
+      const actionCell = document.createElement("td");
+      const button = document.createElement("button");
+      button.className = "delete-price";
+      button.dataset.id = String(item.id);
+      button.dataset.gender = item.gender;
+      button.textContent = "Delete";
+      actionCell.appendChild(button);
+      row.appendChild(actionCell);
+
+      tableBody.appendChild(row);
+    });
   }
 
   function renderMessages(messages) {
@@ -70,27 +96,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!tableBody) return;
 
     if (!messages.length) {
-      tableBody.innerHTML = `<tr><td colspan="5">No messages found.</td></tr>`;
+      renderEmptyRow(tableBody, 5, "No messages found.");
       return;
     }
 
-    tableBody.innerHTML = messages
-      .map(
-        (msg) => `
-      <tr>
-        <td>${msg.name}</td>
-        <td>${msg.email}</td>
-        <td>${msg.message}</td>
-        <td>${msg.created_at ? new Date(msg.created_at).toLocaleString() : "-"}</td>
-        <td>
-          <button class="delete-message" data-id="${msg.id}">
-            Delete
-          </button>
-        </td>
-      </tr>
-    `
-      )
-      .join("");
+    clearChildren(tableBody);
+
+    messages.forEach((msg) => {
+      const row = document.createElement("tr");
+      appendCell(row, msg.name ?? "");
+      appendCell(row, msg.email ?? "");
+      appendCell(row, msg.message ?? "");
+      appendCell(row, msg.created_at ? new Date(msg.created_at).toLocaleString() : "-");
+
+      const actionCell = document.createElement("td");
+      const button = document.createElement("button");
+      button.className = "delete-message";
+      button.dataset.id = String(msg.id);
+      button.textContent = "Delete";
+      actionCell.appendChild(button);
+      row.appendChild(actionCell);
+
+      tableBody.appendChild(row);
+    });
   }
 
   async function requireAdmin() {

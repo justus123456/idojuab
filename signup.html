@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Create Admin</title>
+        <title>Admin Signup Disabled</title>
         <link rel="stylesheet" href="fonts/css/all.css">
         <link rel="stylesheet" href="css/login.css">
         <link rel="shortcut icon"
@@ -13,32 +13,9 @@
     <body>
         <section>
             <div class="login-container signup-container">
-                <h2>Create Admin Account</h2>
-                <p class="helper-text">Use the admin code to create a new admin account.</p>
-                <form id="signup-form">
-                    <div class="form-group">
-                        <label for="signup-username">Username</label>
-                        <input type="text" id="signup-username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-email">Email</label>
-                        <input type="email" id="signup-email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-password">Password</label>
-                        <input type="password" id="signup-password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-confirm-password">Confirm Password</label>
-                        <input type="password" id="signup-confirm-password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-admin-code">Admin Code</label>
-                        <input type="password" id="signup-admin-code" required>
-                    </div>
-                    <button type="submit">Create Admin</button>
-                    <p id="signup-message" style="display:none;"></p>
-                </form>
+                <h2>Admin Signup Disabled</h2>
+                <p class="helper-text">Public admin account creation is disabled for security. Create admin users through a verified server-side workflow or directly in the Supabase dashboard.</p>
+                <p id="signup-message">This page is not available for public signups.</p>
                 <p class="helper-links">
                     <a href="login.html">Back to login</a>
                 </p>
@@ -54,7 +31,6 @@
 
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
         <script src="supabase-config.js" defer></script>
-        <script src="signup-config.js" defer></script>
         <script src="signup.js" defer></script>
     </body>
 </html>
