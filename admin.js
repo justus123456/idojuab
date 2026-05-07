@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const filtered = prices.filter((item) => item.gender === gender);
 
     if (filtered.length === 0) {
-      renderEmptyRow(tableBody, 6, `No ${gender} items found.`);
+      renderEmptyRow(tableBody, 5, `No ${gender} items found.`);
       return;
     }
 
@@ -76,7 +76,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       appendCell(row, item.clothType);
       appendCell(row, `NGN ${item.ironingPrice}`);
       appendCell(row, `NGN ${item.washingPrice}`);
-      appendCell(row, item.gender);
 
       const actionCell = document.createElement("td");
       const button = document.createElement("button");

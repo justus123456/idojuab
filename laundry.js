@@ -2,7 +2,26 @@
 window.addEventListener("scroll", function () {
     const header = document.querySelector("header");
     header.classList.toggle("sticky", window.scrollY > 0);
+
+    const arrow = document.getElementById("arrow");
+    if (arrow) {
+        if (window.scrollY > 500) {
+            arrow.style.display = "flex";
+        } else {
+            arrow.style.display = "none";
+        }
+    }
 });
+
+const arrow = document.getElementById("arrow");
+if (arrow) {
+    arrow.addEventListener("click", () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
+}
 
 function toggleMenu() {
     const menuBar = document.querySelector('.menuToggle');
@@ -56,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filteredPrices.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 5;
+            cell.colSpan = 4;
             cell.textContent = 'No items found.';
             row.appendChild(cell);
             result.appendChild(row);
@@ -69,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
             appendCell(row, item.clothType || 'N/A');
             appendCell(row, `NGN ${item.ironingPrice || 'N/A'}`);
             appendCell(row, `NGN ${item.washingPrice || 'N/A'}`);
-            appendCell(row, item.gender || 'N/A');
             result.appendChild(row);
         });
     }
