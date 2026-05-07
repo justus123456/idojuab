@@ -1,2 +1,7 @@
 .vercel
 .env
+.netlify
+server.log
+node_modules
+dist
+.DS_Store
