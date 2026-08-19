@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
+    const PRODUCTION_SITE_URL = 'https://idojuan-laundry.netlify.app';
     const form = document.getElementById('login-form');
     const errorMessage = document.getElementById('error-message');
     const password = document.getElementById('password');
@@ -104,8 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                const redirectBase = window.location.hostname === 'localhost'
+                    ? PRODUCTION_SITE_URL
+                    : window.location.origin;
+
                 const { error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + '/login.html',
+                    redirectTo: `${redirectBase}/login.html`,
                 });
 
                 if (error) {
@@ -178,3 +183,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
