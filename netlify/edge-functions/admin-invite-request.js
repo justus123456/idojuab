@@ -12,7 +12,7 @@ import {
   sendOtpEmail,
   supabaseFetch,
   writeAudit,
-} from "./admin-invite-shared.js";
+} from "../lib/admin-invite-shared.js";
 
 const GENERIC_SUCCESS = { success: true, message: "Invite sent if the request is eligible." };
 

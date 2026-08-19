@@ -10,7 +10,7 @@
   supabaseFetch,
   validatePasswordStrength,
   writeAudit,
-} from "./admin-invite-shared.js";
+} from "../lib/admin-invite-shared.js";
 
 const GENERIC_FAILURE = { error: "Invalid or expired code." };
 
