@@ -1,4 +1,4 @@
-import {
+﻿import {
   getClientIp,
   hashOtp,
   isValidEmail,
@@ -30,6 +30,19 @@ async function getValidOtp(candidateEmail) {
   if (!otp || new Date(otp.expires_at).getTime() <= Date.now()) return null;
   if (Number(otp.attempts) >= Number(otp.max_attempts)) return null;
   return otp;
+}
+
+async function isIpVerificationLimited(ipAddress) {
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const params = new URLSearchParams({
+    select: "id",
+    ip_address: `eq.${ipAddress}`,
+    created_at: `gte.${since}`,
+  });
+  const response = await supabaseFetch(`/rest/v1/admin_invite_audit?${params.toString()}`);
+  if (!response.ok) return true;
+  const rows = await response.json();
+  return rows.length >= 10;
 }
 
 async function incrementAttempts(otp) {
@@ -85,6 +98,10 @@ export default async (request) => {
   if (configError) return jsonResponse(500, { error: configError });
 
   const ipAddress = getClientIp(request);
+  if (await isIpVerificationLimited(ipAddress)) {
+    return jsonResponse(429, { error: "Too many requests. Please try again later." });
+  }
+
   let payload;
   try {
     payload = await request.json();
@@ -183,3 +200,4 @@ export default async (request) => {
 
   return jsonResponse(200, { success: true });
 };
+

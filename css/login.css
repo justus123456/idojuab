@@ -233,3 +233,71 @@ button:hover {
 
   
   
+
+/* Mobile polish for auth, invite, and onboarding pages */
+@media (max-width: 600px) {
+  body {
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  section {
+    padding: 24px 12px;
+  }
+
+  .login-container,
+  .signup-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 40px auto 0;
+    padding: 20px;
+  }
+
+  .login-container h2 {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .helper-text,
+  .helper-links,
+  #signup-message,
+  #invite-message,
+  #onboarding-message,
+  #reset-message,
+  #error-message {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    text-transform: none;
+  }
+
+  .space {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .space input {
+    min-width: 0;
+  }
+
+  .btn {
+    flex: 0 0 48px;
+    width: 48px;
+  }
+
+  button,
+  .secondary-link {
+    min-height: 44px;
+  }
+
+  .cp {
+    width: 100%;
+    margin-top: 40px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cp::before {
+    width: 100%;
+    left: 0;
+  }
+}

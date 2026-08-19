@@ -814,3 +814,119 @@ header .nav {
   color: #14532d;
   text-transform: none;
 }
+
+/* Mobile polish for admin dashboard */
+@media (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  header,
+  header.sticky {
+    min-height: 84px;
+    max-height: none;
+    padding: 10px;
+  }
+
+  header .logo {
+    display: block;
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
+
+  header .nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 8px;
+  }
+
+  header .nav li {
+    margin: 0;
+  }
+
+  header .nav li a,
+  #logout,
+  #log {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 9px;
+    font-size: 12px;
+    line-height: 1.1;
+  }
+
+  #logout,
+  #log {
+    width: auto;
+    margin-top: 0;
+  }
+
+  .sect {
+    width: calc(100% - 20px);
+    min-height: auto;
+    margin: 112px auto 32px;
+    padding: 14px;
+  }
+
+  .firt {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .next {
+    display: block;
+    margin: 20px 0 0;
+  }
+
+  .form-row {
+    max-width: none;
+    gap: 8px;
+  }
+
+  .idk,
+  .but,
+  .buts {
+    width: 100%;
+    max-width: none;
+  }
+
+  .buts {
+    height: auto;
+    min-height: 44px;
+  }
+
+  .pricing {
+    min-height: auto;
+    max-height: none;
+    padding: 40px 0;
+  }
+
+  .pricing .table,
+  .message .table {
+    width: calc(100% - 20px);
+    overflow-x: auto;
+    padding: 10px;
+  }
+
+  .pricing .table table,
+  .message .table table {
+    min-width: 720px;
+  }
+
+  .pricing .table th,
+  .pricing .table td,
+  .message .table th,
+  .message .table td {
+    font-size: 13px;
+    padding: 9px 8px;
+    white-space: nowrap;
+  }
+
+  .clear {
+    width: 100%;
+  }
+}

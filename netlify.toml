@@ -1,9 +1,17 @@
-[build]
+﻿[build]
   publish = "."
 
 [[edge_functions]]
   path = "/api/contact"
   function = "contact"
+
+[[edge_functions]]
+  path = "/api/admin-invite-request"
+  function = "admin-invite-request"
+
+[[edge_functions]]
+  path = "/api/admin-invite-verify"
+  function = "admin-invite-verify"
 
 [[redirects]]
   from = "/signup"
