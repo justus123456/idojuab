@@ -800,3 +800,17 @@ header .nav {
       font-size: 14px;
   }
 }
+
+.invite-admin {
+  min-height: 40vh;
+}
+
+.invite-next {
+  justify-content: center;
+}
+
+.admin-feedback {
+  margin-top: 15px;
+  color: #14532d;
+  text-transform: none;
+}

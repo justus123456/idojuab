@@ -869,3 +869,215 @@ header .nav li a:hover {
     font: 300;
   }
 }/*# sourceMappingURL=laundry.css.map */
+
+.store-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  padding: 8px 12px;
+  border-radius: 5px;
+  background: rgba(31, 31, 31, 0.9);
+  color: #f5f5f5;
+  font-size: 13px;
+  text-transform: none;
+}
+
+.store-status.is-open {
+  background: #14532d;
+}
+
+.store-status.is-closed {
+  background: #7f1d1d;
+}
+
+.btn-secondary {
+  margin-left: 10px;
+  background: #14532d;
+}
+
+.timeline-item-inner small {
+  margin-top: 10px;
+  color: #333;
+  font-size: 13px;
+  text-transform: none;
+}
+
+.estimator {
+  width: 60%;
+  margin: 30px auto 0;
+  padding: 20px;
+  border-radius: 5px;
+  background: #f5f5f5;
+  box-shadow: 0 5px 20px rgba(77, 77, 77, 0.432);
+}
+
+.estimator h3 {
+  margin-bottom: 8px;
+  color: rgb(31, 31, 31);
+  font-size: 1.4em;
+}
+
+.estimator p,
+.estimate-summary,
+.estimate-summary li,
+.faq-answer p {
+  text-transform: none;
+}
+
+.estimator-controls {
+  display: grid;
+  grid-template-columns: 1fr 160px 120px;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.estimator select,
+.estimator button,
+.estimate-actions a,
+.directions-link,
+.copy-address,
+.faq-question {
+  min-height: 42px;
+  border: 1px solid rgba(31, 31, 31, 0.25);
+  border-radius: 5px;
+  padding: 10px;
+  font: inherit;
+}
+
+.estimator button,
+.estimate-actions a,
+.directions-link,
+.copy-address,
+.faq-question {
+  background: rgba(31, 31, 31, 0.9);
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+.estimate-summary ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.estimate-summary li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.estimate-summary li button {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 10px;
+}
+
+.estimate-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.estimate-actions a,
+.directions-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.faq {
+  padding: 80px 15px;
+  min-height: 70vh;
+}
+
+.faq-list {
+  display: grid;
+  gap: 12px;
+  max-width: 850px;
+  margin: 35px auto 0;
+}
+
+.faq-question {
+  width: 100%;
+  margin: 0;
+  text-align: left;
+  background: #f5f5f5;
+  color: rgb(31, 31, 31);
+  box-shadow: 0 5px 20px rgba(77, 77, 77, 0.2);
+}
+
+.faq-answer {
+  display: none;
+  padding: 15px 18px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-top: 0;
+}
+
+.faq-item.active .faq-answer {
+  display: block;
+}
+
+.contact .box .contact-form .input-box label {
+  display: block;
+  margin-bottom: 6px;
+  color: rgb(31, 31, 31);
+  font-size: 14px;
+}
+
+.directions-link {
+  margin-top: 12px;
+}
+
+.contact .box .icon-container .icons a {
+  color: rgb(31, 31, 31);
+  text-decoration: underline;
+  text-transform: none;
+}
+
+.copy-address {
+  width: auto;
+  margin-top: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+@media (max-width: 991px) {
+  header {
+    gap: 12px;
+  }
+
+  .store-status {
+    position: relative;
+    z-index: 1001;
+  }
+
+  .estimator {
+    width: 90%;
+  }
+}
+
+@media (max-width: 768px) {
+  .estimator {
+    width: 100%;
+  }
+
+  .estimator-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .estimate-actions {
+    flex-direction: column;
+  }
+
+  .estimate-summary li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

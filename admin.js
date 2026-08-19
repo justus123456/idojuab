@@ -206,6 +206,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  async function requestAdminInvite(email, messageBox, form) {
+    try {
+      const { data: sessionData } = await client.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      if (!token) {
+        if (messageBox) messageBox.textContent = "Please log in again before sending invites.";
+        return;
+      }
+
+      const response = await fetch("/api/admin-invite-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (messageBox) messageBox.textContent = result.error || "Invite request failed.";
+        return;
+      }
+
+      if (form) form.reset();
+      if (messageBox) messageBox.textContent = "Invite sent if the request is eligible.";
+    } catch (error) {
+      console.error("Invite request failed:", error);
+      if (messageBox) messageBox.textContent = "Invite request failed.";
+    }
+  }
+
   const adminUser = await requireAdmin();
   if (!adminUser) {
     return;
@@ -216,6 +249,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (logoutText) logoutText.addEventListener("click", logoutUser);
   if (logoutIcon) logoutIcon.addEventListener("click", logoutUser);
+
+  const inviteForm = document.getElementById("admin-invite-form");
+  if (inviteForm) {
+    inviteForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const emailInput = document.getElementById("invite-email");
+      const messageBox = document.getElementById("invite-message");
+      const email = emailInput?.value.trim().toLowerCase();
+
+      if (!email) {
+        if (messageBox) messageBox.textContent = "Candidate email is required.";
+        return;
+      }
+
+      await requestAdminInvite(email, messageBox, inviteForm);
+    });
+  }
 
   const maleForm = document.getElementById("important-form");
   if (maleForm) {
@@ -329,6 +380,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const clearMaleButton = document.getElementById("clear");
   if (clearMaleButton) {
     clearMaleButton.addEventListener("click", async () => {
+      if (!window.confirm("Clear all Male prices? This cannot be undone.")) return;
+
       try {
         const { error } = await client
           .from('prices')
@@ -350,6 +403,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const clearFemaleButton = document.getElementById("dear");
   if (clearFemaleButton) {
     clearFemaleButton.addEventListener("click", async () => {
+      if (!window.confirm("Clear all Female prices? This cannot be undone.")) return;
+
       try {
         const { error } = await client
           .from('prices')
@@ -371,6 +426,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const clearMessagesButton = document.getElementById("delete");
   if (clearMessagesButton) {
     clearMessagesButton.addEventListener("click", async () => {
+      if (!window.confirm("Clear all messages? This cannot be undone.")) return;
+
       try {
         const { error } = await client
           .from('messages')

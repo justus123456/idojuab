@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Invite Admin</title>
+        <link rel="stylesheet" href="fonts/css/all.css">
+        <link rel="stylesheet" href="css/login.css">
+        <link rel="shortcut icon" href="images/Laundry Logo design template - Made with PosterMyWall.png" type="image/x-icon">
+    </head>
+    <body>
+        <section>
+            <div class="login-container signup-container">
+                <h2>Invite Admin</h2>
+                <p class="helper-text">Send a one-time admin setup code to a verified staff email.</p>
+                <form id="admin-invite-form">
+                    <div class="form-group">
+                        <label for="invite-email">Candidate Email</label>
+                        <input type="email" id="invite-email" name="email" required>
+                    </div>
+                    <button type="submit">Send Invite</button>
+                    <p id="invite-message" style="display: none;"></p>
+                </form>
+                <p class="helper-links">
+                    <a href="admin.html">Back to dashboard</a>
+                </p>
+            </div>
+        </section>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+        <script src="supabase-config.js" defer></script>
+        <script src="admin-invite.js" defer></script>
+    </body>
+</html>

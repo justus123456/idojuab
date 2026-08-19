@@ -26,6 +26,7 @@
                 <li><a href="#home">product</a></li>
                 <li><a href="#pricing">pricing</a></li>
                 <li><a href="#message">messages</a></li>
+                <li><a href="#invite">invite</a></li>
                 <li><button id="logout" class="log">logout</button></li>
                 <li><button id="log" class="ion"><i class="fas fa-power-off"></i></button></li>
 
@@ -164,6 +165,24 @@
                     </table>
                     <button id="delete" class="clear">Clear</button>
                 </div>
+            </div>
+        </section>
+        <section class="sect invite-admin" id="invite" data-aos="fade-up">
+            <div class="firt">
+                <h1>Invite Admin</h1>
+            </div>
+            <div class="next invite-next">
+                <form id="admin-invite-form">
+                    <div class="form-row">
+                        <label for="invite-email">Candidate Email:</label>
+                        <input class="idk" id="invite-email" name="email" type="email" placeholder="newadmin@example.com" required>
+                    </div>
+                    <input class="but" type="submit" value="Send">
+                    <p id="invite-message" class="admin-feedback" aria-live="polite"></p>
+                </form>
+                <a href="admin-invite.html">
+                    <button class="buts">Open Invite Page</button>
+                </a>
             </div>
         </section>
         <div class="cp">
