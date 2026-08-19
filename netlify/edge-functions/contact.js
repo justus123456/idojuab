@@ -1,5 +1,5 @@
-﻿const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://wkknfeknvunhugrabvpl.supabase.co";
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "sb_publishable_KthcrJ7DN8r8dLIMugqE7w_m6W-H6G2";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RATE_LIMIT_PEPPER = Deno.env.get("RATE_LIMIT_PEPPER") || Deno.env.get("OTP_PEPPER") || "";
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;

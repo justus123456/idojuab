@@ -1,6 +1,10 @@
 [build]
   publish = "."
 
+[build.environment]
+  NODE_VERSION = "20"
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,SUPABASE_ANON_KEY"
+
 [[edge_functions]]
   path = "/api/contact"
   function = "contact"

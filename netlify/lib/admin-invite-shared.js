@@ -1,5 +1,5 @@
-export const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://wkknfeknvunhugrabvpl.supabase.co";
-export const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "sb_publishable_KthcrJ7DN8r8dLIMugqE7w_m6W-H6G2";
+export const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+export const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 export const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 export const OTP_PEPPER = Deno.env.get("OTP_PEPPER") || "";
 export const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
