@@ -249,15 +249,39 @@ function setupContactHelpers() {
     }
 }
 
-window.addEventListener("load", () => {
+function hidePreloader() {
     const preLoad = document.querySelector(".preloader");
     const body = document.querySelector("body");
 
-    setTimeout(() => {
-        if (body) body.style.overflowY = "scroll";
-        if (preLoad) preLoad.classList.add("fadeOut");
-    }, 1200);
-});
+    if (body) body.style.overflowY = "auto";
+    if (preLoad) preLoad.classList.add("fadeOut");
+}
+
+function setupLazyMap() {
+    const iframe = document.querySelector(".map iframe[data-src]");
+    if (!iframe) return;
+
+    const loadMap = () => {
+        if (!iframe.src) iframe.src = iframe.dataset.src;
+    };
+
+    if (!("IntersectionObserver" in window)) {
+        loadMap();
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+            loadMap();
+            observer.disconnect();
+        }
+    }, { rootMargin: "300px" });
+
+    observer.observe(iframe);
+}
+
+window.addEventListener("load", hidePreloader);
+setTimeout(hidePreloader, 900);
 
 document.addEventListener("DOMContentLoaded", () => {
     const client = window.supabaseClient;
@@ -267,6 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupFaq();
     setupEstimator();
     setupContactHelpers();
+    setupLazyMap();
 
     if (!client) {
         console.error("Supabase client not available.");

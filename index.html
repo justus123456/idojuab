@@ -296,7 +296,7 @@
                         </form>
 
                         <div class="map" data-aos="fade-left">
-                            <iframe title="Idojuan Laundry location map" src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15756.149034500775!2d7.3539399!3d9.1511077!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104ddf5afabd6683%3A0x3121e9f963afd580!2sIdojuan%20Laundry%20and%20dry%20cleaning%20services!5e0!3m2!1sen!2sng!4v1722087592027!5m2!1sen!2sng" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            <iframe title="Idojuan Laundry location map" data-src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15756.149034500775!2d7.3539399!3d9.1511077!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104ddf5afabd6683%3A0x3121e9f963afd580!2sIdojuan%20Laundry%20and%20dry%20cleaning%20services!5e0!3m2!1sen!2sng!4v1722087592027!5m2!1sen!2sng" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                             <a class="directions-link" href="https://www.google.com/maps/search/?api=1&query=Idojuan%20Laundry%20and%20dry%20cleaning%20services%20Kubwa%20Abuja" target="_blank" rel="noopener">Get directions</a>
                         </div>
                         <div class="icon-container" data-aos="fade-up" data-aos-delay="100">
@@ -341,7 +341,7 @@
         <script src="laundry.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" integrity="sha512-A7AYk1fGKX6S2SsHywmPkrnzTZHrgiVT7GcQkLGDe2ev0aWb8zejytzS8wjo7PGEXKqJOrjQ4oORtnimIRZBtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script>
-            AOS.init({ duration: 600 });
+            AOS.init({ duration: 450, once: true, disable: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
         </script>
     </body>
 </html>

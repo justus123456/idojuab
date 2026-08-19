@@ -28,9 +28,17 @@ export function getClientIp(request) {
 }
 
 export function requireServerConfig() {
-  if (!SUPABASE_SERVICE_ROLE_KEY || !OTP_PEPPER) {
+  const missing = [];
+  if (!SUPABASE_URL) missing.push("SUPABASE_URL");
+  if (!SUPABASE_ANON_KEY) missing.push("SUPABASE_ANON_KEY");
+  if (!SUPABASE_SERVICE_ROLE_KEY) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (!OTP_PEPPER) missing.push("OTP_PEPPER");
+
+  if (missing.length > 0) {
+    console.error(`Server invite configuration is missing: ${missing.join(", ")}`);
     return "Server invite configuration is missing.";
   }
+
   return "";
 }
 
