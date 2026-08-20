@@ -1311,3 +1311,63 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Pricing and map layout fixes */
+.pricing {
+  max-height: none;
+  overflow: visible;
+}
+
+.pricing .estimator {
+  margin-bottom: 28px;
+}
+
+.pricing .table {
+  margin-top: 28px;
+}
+
+.contact .box .map {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: auto;
+}
+
+.contact .box .map iframe {
+  width: 100%;
+  min-height: 340px;
+  flex: 1 1 auto;
+}
+
+.directions-link {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0;
+}
+
+@media (min-width: 992px) {
+  #pricing {
+    padding-bottom: 96px;
+  }
+
+  .contact .box .map {
+    min-height: 430px;
+  }
+}
+
+@media (max-width: 600px) {
+  .pricing .estimator,
+  .pricing .table {
+    width: calc(100% - 28px);
+  }
+
+  .pricing .estimator {
+    margin-top: 22px;
+    margin-bottom: 24px;
+  }
+
+  .contact .box .map iframe {
+    min-height: 260px;
+  }
+}
+

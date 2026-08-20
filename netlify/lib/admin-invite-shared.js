@@ -4,6 +4,7 @@ export const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY
 export const OTP_PEPPER = Deno.env.get("OTP_PEPPER") || "";
 export const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 export const OTP_EMAIL_FROM = Deno.env.get("OTP_EMAIL_FROM") || "Idojuan Laundry <onboarding@resend.dev>";
+export const SITE_URL = Deno.env.get("SITE_URL") || Deno.env.get("DEPLOY_PRIME_URL") || Deno.env.get("URL") || "";
 
 export function jsonResponse(status, body) {
   return new Response(JSON.stringify(body), {
@@ -123,7 +124,8 @@ export async function writeAudit(eventType, details) {
 }
 
 export async function sendOtpEmail(candidateEmail, otp) {
-  const onboardingUrl = `${Deno.env.get("URL") || ""}/admin-onboarding.html?email=${encodeURIComponent(candidateEmail)}`;
+  const siteUrl = SITE_URL.replace(/\/$/, "");
+  const onboardingUrl = `${siteUrl}/admin-onboarding.html?email=${encodeURIComponent(candidateEmail)}`;
 
   if (!RESEND_API_KEY) {
     console.warn(`Admin OTP for ${candidateEmail}: ${otp}`);
@@ -146,3 +148,5 @@ export async function sendOtpEmail(candidateEmail, otp) {
 
   return response.ok;
 }
+
+

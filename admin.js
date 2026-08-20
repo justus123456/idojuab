@@ -79,12 +79,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       appendCell(row, item.gender);
 
       const actionCell = document.createElement("td");
-      const button = document.createElement("button");
-      button.className = "delete-price";
-      button.dataset.id = String(item.id);
-      button.dataset.gender = item.gender;
-      button.textContent = "Delete";
-      actionCell.appendChild(button);
+      const editButton = document.createElement("button");
+      editButton.className = "edit-price";
+      editButton.dataset.id = String(item.id);
+      editButton.dataset.clothType = item.clothType;
+      editButton.dataset.ironingPrice = String(item.ironingPrice);
+      editButton.dataset.washingPrice = String(item.washingPrice);
+      editButton.dataset.gender = item.gender;
+      editButton.textContent = "Edit";
+
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "delete-price";
+      deleteButton.dataset.id = String(item.id);
+      deleteButton.dataset.gender = item.gender;
+      deleteButton.textContent = "Delete";
+
+      const actionWrap = document.createElement("div");
+      actionWrap.className = "table-actions";
+      actionWrap.appendChild(editButton);
+      actionWrap.appendChild(deleteButton);
+      actionCell.appendChild(actionWrap);
       row.appendChild(actionCell);
 
       tableBody.appendChild(row);
@@ -337,6 +351,113 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   document.addEventListener("click", async (event) => {
+    const editButton = event.target.closest(".edit-price");
+    if (editButton) {
+      const row = editButton.closest("tr");
+      if (!row) return;
+
+      row.classList.add("editing-row");
+      clearChildren(row);
+      appendCell(row, "Edit");
+
+      const clothCell = document.createElement("td");
+      const clothInput = document.createElement("input");
+      clothInput.className = "edit-input";
+      clothInput.value = editButton.dataset.clothType || "";
+      clothCell.appendChild(clothInput);
+      row.appendChild(clothCell);
+
+      const ironingCell = document.createElement("td");
+      const ironingInput = document.createElement("input");
+      ironingInput.className = "edit-input";
+      ironingInput.type = "number";
+      ironingInput.min = "0";
+      ironingInput.value = editButton.dataset.ironingPrice || "";
+      ironingCell.appendChild(ironingInput);
+      row.appendChild(ironingCell);
+
+      const washingCell = document.createElement("td");
+      const washingInput = document.createElement("input");
+      washingInput.className = "edit-input";
+      washingInput.type = "number";
+      washingInput.min = "0";
+      washingInput.value = editButton.dataset.washingPrice || "";
+      washingCell.appendChild(washingInput);
+      row.appendChild(washingCell);
+
+      const genderCell = document.createElement("td");
+      const genderSelect = document.createElement("select");
+      genderSelect.className = "edit-input";
+      ["Male", "Female"].forEach((gender) => {
+        const option = document.createElement("option");
+        option.value = gender;
+        option.textContent = gender;
+        option.selected = gender === editButton.dataset.gender;
+        genderSelect.appendChild(option);
+      });
+      genderCell.appendChild(genderSelect);
+      row.appendChild(genderCell);
+
+      const actionCell = document.createElement("td");
+      const actionWrap = document.createElement("div");
+      actionWrap.className = "table-actions";
+
+      const saveButton = document.createElement("button");
+      saveButton.className = "save-price";
+      saveButton.dataset.id = editButton.dataset.id;
+      saveButton.textContent = "Save";
+
+      const cancelButton = document.createElement("button");
+      cancelButton.className = "cancel-edit";
+      cancelButton.textContent = "Cancel";
+
+      actionWrap.appendChild(saveButton);
+      actionWrap.appendChild(cancelButton);
+      actionCell.appendChild(actionWrap);
+      row.appendChild(actionCell);
+      return;
+    }
+
+    const cancelButton = event.target.closest(".cancel-edit");
+    if (cancelButton) {
+      fetchPrices();
+      return;
+    }
+
+    const saveButton = event.target.closest(".save-price");
+    if (saveButton) {
+      const row = saveButton.closest("tr");
+      const inputs = row ? row.querySelectorAll(".edit-input") : [];
+      const clothType = inputs[0]?.value.trim();
+      const ironingPrice = Number(inputs[1]?.value);
+      const washingPrice = Number(inputs[2]?.value);
+      const gender = inputs[3]?.value;
+
+      if (!clothType || !Number.isFinite(ironingPrice) || !Number.isFinite(washingPrice) || !gender) return;
+
+      try {
+        const { error } = await client
+          .from('prices')
+          .update({
+            cloth_type: clothType,
+            ironing_price: ironingPrice,
+            washing_price: washingPrice,
+            gender
+          })
+          .eq('id', Number(saveButton.dataset.id));
+
+        if (error) {
+          console.error("Error updating price:", error);
+          return;
+        }
+
+        fetchPrices();
+      } catch (error) {
+        console.error("Error updating price:", error);
+      }
+      return;
+    }
+
     const priceButton = event.target.closest(".delete-price");
     if (priceButton) {
       try {

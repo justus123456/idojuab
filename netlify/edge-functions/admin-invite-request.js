@@ -23,7 +23,7 @@ async function countRecentInvites(filter, sinceIso) {
   return rows.length;
 }
 
-export default async (request) => {
+async function handleInviteRequest(request) {
   if (request.method !== "POST") {
     return jsonResponse(405, { error: "Method not allowed." });
   }
@@ -117,4 +117,14 @@ export default async (request) => {
   }
 
   return jsonResponse(200, GENERIC_SUCCESS);
+}
+
+export default async (request) => {
+  try {
+    return await handleInviteRequest(request);
+  } catch (error) {
+    console.error('Admin invite request crashed:', error?.message || error);
+    return jsonResponse(500, { error: 'Invite request failed on the server.' });
+  }
 };
+
