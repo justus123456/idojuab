@@ -20,20 +20,25 @@
         </style>
     </head>
     <body>
-        <header>
-            <a href="#" class="logo">Idojuan laundry</a>
-            <ul class="nav">
-                <li><a href="#home">product</a></li>
-                <li><a href="#pricing">pricing</a></li>
-                <li><a href="#message">messages</a></li><li><a href="#customers">customers</a></li><li><a href="#orders">orders</a></li><li><a href="#settings">settings</a></li>
-                <li><a href="#invite">invite</a></li>
-                <li><button id="logout" class="log">logout</button></li>
-                <li><button id="log" class="ion"><i class="fas fa-power-off"></i></button></li>
-
-            </ul>
-            
+        <header class="admin-sidebar">
+            <div class="admin-brand"><span class="brand-mark">I</span><div><strong>Idojuan</strong><small>Admin workspace</small></div></div>
+            <div class="sidebar-label">Workspace</div>
+            <nav class="admin-nav" aria-label="Admin sections">
+                <a href="#dashboard" data-admin-page="dashboard"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
+                <a href="#pricing" data-admin-page="pricing"><i class="fas fa-tags"></i><span>Prices</span></a>
+                <a href="#orders" data-admin-page="orders"><i class="fas fa-receipt"></i><span>Orders</span></a>
+                <a href="#customers" data-admin-page="customers"><i class="fas fa-users"></i><span>Customers</span></a>
+                <a href="#message" data-admin-page="message"><i class="fas fa-envelope"></i><span>Messages</span></a>
+                <a href="#settings" data-admin-page="settings"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                <a href="#invite" data-admin-page="invite"><i class="fas fa-user-plus"></i><span>Invite admin</span></a>
+            </nav>
+            <div class="sidebar-bottom">
+                <a class="view-site" href="index.html"><i class="fas fa-external-link-alt"></i><span>View public site</span></a>
+                <button id="logout" class="log"><i class="fas fa-sign-out-alt"></i><span>Log out</span></button>
+                <button id="log" class="ion" aria-label="Log out"><i class="fas fa-power-off"></i></button>
+            </div>
         </header>
-        <section class="sect" id="home"  data-aos="fade-right">
+        <section class="sect admin-page" id="male-product" data-admin-page="pricing" data-aos="fade-right">
             <div class="firt">
                 <h1>Please Enter Your Product! male</h1>
             </div>
@@ -62,7 +67,7 @@
                 </a>
             </div>
         </section>
-        <section class="sect" data-aos="fade-left">
+        <section class="sect admin-page" id="female-product" data-admin-page="pricing" data-aos="fade-left">
             <div class="firt">
                 <h1>Please Enter Your Product! female</h1>
             </div>
@@ -92,7 +97,7 @@
             </div>
         </section>
         
-        <section class="pricing" id="pricing"  data-aos="fade-right">
+        <section class="pricing admin-page" id="pricing" data-admin-page="pricing" data-aos="fade-right">
             <div class="container">
                 <div class="title">
                     <h2 class="titleText">Price <span>L</span>ist</h2>
@@ -118,7 +123,7 @@
                 <button id="clear" class="clear">Clear</button>
             </div>
         </section>
-        <section class="pricing"   data-aos="fade-right">
+        <section class="pricing admin-page" id="pricing-female" data-admin-page="pricing" data-aos="fade-right">
             <div class="container">
                 <div class="title">
                     <h2 class="titleText"><span>f</span>emale</h2>
@@ -143,7 +148,7 @@
                 <button id="dear" class="clear">Clear</button>
             </div>
         </section>
-        <section class="message" id="message"  data-aos="fade-up">
+        <section class="message admin-page" id="message" data-admin-page="message" data-aos="fade-up">
             <div class="container">
                 <div class="title">
                     <h2 class="titleText"><span>m</span>essages</h2>
@@ -168,7 +173,7 @@
                 </div>
             </div>
         </section>
-        <section class="sect dashboard-summary" id="dashboard" data-aos="fade-up">
+        <section class="sect dashboard-summary admin-page" id="dashboard" data-admin-page="dashboard" data-aos="fade-up">
             <div class="firt"><h1>Business Summary</h1></div>
             <div class="metric-grid">
                 <div><span>Total Prices</span><strong id="metric-prices">0</strong></div>
@@ -186,7 +191,7 @@
             </div>
         </section>
 
-        <section class="sect ops-section" id="customers" data-aos="fade-up">
+        <section class="sect ops-section admin-page" id="customers" data-admin-page="customers" data-aos="fade-up">
             <div class="firt"><h1>Customer Records</h1></div>
             <div class="ops-grid">
                 <form id="customer-form" class="ops-card">
@@ -204,7 +209,7 @@
             </div>
         </section>
 
-        <section class="sect ops-section" id="orders" data-aos="fade-up">
+        <section class="sect ops-section admin-page" id="orders" data-admin-page="orders" data-aos="fade-up">
             <div class="firt"><h1>Orders and Tickets</h1></div>
             <div class="ops-grid">
                 <form id="order-form" class="ops-card">
@@ -231,7 +236,7 @@
             </div>
         </section>
 
-        <section class="sect ops-section" id="settings" data-aos="fade-up">
+        <section class="sect ops-section admin-page" id="settings" data-admin-page="settings" data-aos="fade-up">
             <div class="firt"><h1>Settings, FAQ, and Audit</h1></div>
             <div class="ops-grid">
                 <form id="settings-form" class="ops-card">
@@ -250,7 +255,7 @@
             <div class="table compact-table"><table><thead><tr><th>Question</th><th>Answer</th><th>Order</th><th>Status</th><th>Action</th></tr></thead><tbody id="faq-table-body"></tbody></table></div>
             <div class="table compact-table"><table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Type</th><th>ID</th></tr></thead><tbody id="audit-table-body"></tbody></table></div>
         </section>
-        <section class="sect invite-admin" id="invite" data-aos="fade-up">
+        <section class="sect invite-admin admin-page" id="invite" data-admin-page="invite" data-aos="fade-up">
             <div class="firt">
                 <h1>Invite Admin</h1>
             </div>
@@ -278,6 +283,7 @@
         <script src="supabase-config.js" defer></script>
         <script src="admin.js" defer></script>
         <script src="admin-ops.js" defer></script>
+        <script src="admin-nav.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" integrity="sha512-A7AYk1fGKX6S2SsHywmPkrnzTZHrgiVT7GcQkLGDe2ev0aWb8zejytzS8wjo7PGEXKqJOrjQ4oORtnimIRZBtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script>
             AOS.init({

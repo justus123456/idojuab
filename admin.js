@@ -2,6 +2,7 @@ window.addEventListener("scroll", () => {
   const header = document.querySelector("header");
   const logoutText = document.getElementById("logout");
   const logoutIcon = document.getElementById("log");
+  if (header?.classList.contains("admin-sidebar")) return;
 
   if (header) {
     header.classList.toggle("sticky", window.scrollY > 0);
