@@ -1070,3 +1070,33 @@ body { background: #f7f8fa; color: #1f2933; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .admin-page .firt h1 { font-size: 24px; }
 }.metric-grid > div { background: transparent; border: 0; border-bottom: 1px solid #dfe3e7; box-shadow: none; padding: 14px 4px; }
+/* Modern flat workspace layer */
+.admin-page { background: #f7f8fa; }
+.admin-page .firt { border-bottom: 1px solid #dfe3e8; padding-bottom: 22px; margin-bottom: 32px; }
+.admin-page .firt h1 { font-weight: 600; letter-spacing: -0.02em; }
+.admin-page .title { align-items: flex-start; border-bottom: 1px solid #dfe3e8; padding-bottom: 18px; margin-bottom: 28px; }
+.admin-page .titleText, .admin-page h2 { font-weight: 600; letter-spacing: -0.02em; }
+.admin-page .next, .admin-page .ops-card, .dashboard-summary .ops-card { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; }
+.admin-page .ops-card label, .admin-page .form-row label { color: #68717c; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.admin-page .idk, .admin-page input, .admin-page select, .admin-page textarea { border: 1px solid #d9dee4; border-radius: 6px; background: #fff; color: #1f2933; font-size: 14px; font-weight: 500; }
+.admin-page .idk:focus, .admin-page input:focus, .admin-page select:focus, .admin-page textarea:focus { border-color: #68717c; box-shadow: 0 0 0 3px rgba(104,113,124,.12); }
+.admin-page .table { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.admin-page .table table { width: 100%; min-width: 720px; border-collapse: collapse; background: transparent; }
+.admin-page .table th { background: transparent; border-bottom: 1px solid #bfc6ce; color: #737c86; font-size: 10px; font-weight: 600; letter-spacing: .1em; padding: 13px 12px; text-transform: uppercase; text-align: left; }
+.admin-page .table td { background: transparent; border-bottom: 1px solid #e2e6ea; color: #27313a; font-size: 13px; font-weight: 500; padding: 15px 12px; vertical-align: middle; }
+.admin-page .table tbody tr:hover td { background: #eef1f3; }
+.admin-page .clear, .admin-page .but, .admin-page .buts, .admin-page .export-actions button { border: 0; border-radius: 6px; background: #1f2933; color: #fff; cursor: pointer; font-size: 12px; font-weight: 600; letter-spacing: .02em; padding: 11px 16px; }
+.admin-page .clear:hover, .admin-page .but:hover, .admin-page .buts:hover, .admin-page .export-actions button:hover { background: #3e4a55; }
+.admin-page .export-actions { border-top: 1px solid #dfe3e8; padding-top: 20px; }
+.admin-page .metric-grid { gap: 24px; margin: 0 0 36px; }
+.admin-page .metric-grid > div { min-height: 76px; border-bottom: 1px solid #cfd5db; padding: 0 0 15px; }
+.admin-page .metric-grid strong { color: #1f2933; font-size: 24px; font-weight: 600; }
+.admin-page .metric-grid span { color: #7b848d; font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.admin-page .ops-section .ops-grid { gap: 52px; }
+.admin-page .ops-section .ops-card + .ops-card { border-left: 1px solid #dfe3e8; padding-left: 52px; }
+.admin-page .order-item-list { border-left: 2px solid #d7dde2; color: #56616b; font-size: 13px; padding-left: 18px; }
+.admin-page .admin-feedback { margin: 16px 0; color: #52606b; font-size: 13px; }
+@media (max-width: 850px) {
+  .admin-page .ops-section .ops-card + .ops-card { border-left: 0; border-top: 1px solid #dfe3e8; padding: 28px 0 0; }
+  .admin-page .metric-grid { gap: 16px; }
+}
