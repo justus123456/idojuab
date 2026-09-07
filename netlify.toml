@@ -16,6 +16,9 @@
 [[edge_functions]]
   path = "/api/admin-invite-verify"
   function = "admin-invite-verify"
+[[edge_functions]]
+  path = "/api/order-status"
+  function = "order-status"
 
 [[redirects]]
   from = "/signup"
@@ -40,3 +43,4 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Resource-Policy = "same-origin"
+

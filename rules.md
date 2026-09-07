@@ -40,3 +40,12 @@
 - `netlify.toml` maps `/api/contact`, `/api/admin-invite-request`, and `/api/admin-invite-verify` to edge functions.
 - Required environment variables are documented in `.env.example`.
 - Run `scripts/supabase-security.sql` before deploying.
+
+## Operations Rules
+
+- Orders are created for in-store drop-off and collection only.
+- Staff must add item quantities and prices; subtotal, discount, total, balance, and payment status are calculated by the dashboard.
+- Order status values are `received`, `washing`, `ironing`, `packaging`, `ready`, `collected`, and `cancelled`.
+- Customer ticket lookup reveals only the ticket status, totals, balance, and collection timestamps.
+- Ready notifications are manually copied to WhatsApp; no transport or automated delivery service is assumed.
+- Customer, order, FAQ, settings, and audit data remains protected by database RLS.

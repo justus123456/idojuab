@@ -25,7 +25,7 @@
             <ul class="nav">
                 <li><a href="#home">product</a></li>
                 <li><a href="#pricing">pricing</a></li>
-                <li><a href="#message">messages</a></li>
+                <li><a href="#message">messages</a></li><li><a href="#customers">customers</a></li><li><a href="#orders">orders</a></li><li><a href="#settings">settings</a></li>
                 <li><a href="#invite">invite</a></li>
                 <li><button id="logout" class="log">logout</button></li>
                 <li><button id="log" class="ion"><i class="fas fa-power-off"></i></button></li>
@@ -156,6 +156,7 @@
                                 <th>email</th>
                                 <th>message</th>
                                 <th>date</th>
+                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -166,6 +167,88 @@
                     <button id="delete" class="clear">Clear</button>
                 </div>
             </div>
+        </section>
+        <section class="sect dashboard-summary" id="dashboard" data-aos="fade-up">
+            <div class="firt"><h1>Business Summary</h1></div>
+            <div class="metric-grid">
+                <div><span>Total Prices</span><strong id="metric-prices">0</strong></div>
+                <div><span>Unread Messages</span><strong id="metric-messages">0</strong></div>
+                <div><span>Today Orders</span><strong id="metric-today-orders">0</strong></div>
+                <div><span>Ready/Collected</span><strong id="metric-ready-orders">0</strong></div>
+                <div><span>Today Revenue</span><strong id="metric-revenue-today">NGN 0</strong></div>
+                <div><span>This Month</span><strong id="metric-revenue-month">NGN 0</strong></div>
+            </div>
+            <div class="ops-card"><h2>Popular services</h2><ul id="popular-services"></ul></div>
+            <div class="export-actions">
+                <button type="button" id="export-prices">Export Prices</button>
+                <button type="button" id="export-messages">Export Messages</button>
+                <button type="button" id="export-orders">Export Orders</button>
+            </div>
+        </section>
+
+        <section class="sect ops-section" id="customers" data-aos="fade-up">
+            <div class="firt"><h1>Customer Records</h1></div>
+            <div class="ops-grid">
+                <form id="customer-form" class="ops-card">
+                    <label for="customer-name">Full Name</label><input class="idk" id="customer-name" required>
+                    <label for="customer-phone">Phone</label><input class="idk" id="customer-phone" required>
+                    <label for="customer-email">Email</label><input class="idk" id="customer-email" type="email">
+                    <label for="customer-address">Address optional</label><input class="idk" id="customer-address">
+                    <label for="customer-notes">Notes</label><textarea class="idk" id="customer-notes"></textarea>
+                    <button class="but" type="submit">Save Customer</button>
+                </form>
+                <div class="ops-card">
+                    <label for="customer-search">Search customer</label><input class="idk" id="customer-search" placeholder="Phone, name, email">
+                    <div class="table compact-table"><table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Total Orders</th><th>Notes</th></tr></thead><tbody id="customers-table-body"></tbody></table></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sect ops-section" id="orders" data-aos="fade-up">
+            <div class="firt"><h1>Orders and Tickets</h1></div>
+            <div class="ops-grid">
+                <form id="order-form" class="ops-card">
+                    <label for="order-customer-name">Customer Name</label><input class="idk" id="order-customer-name" required>
+                    <label for="order-customer-phone">Customer Phone</label><input class="idk" id="order-customer-phone" required>
+                    <label for="order-customer-email">Customer Email</label><input class="idk" id="order-customer-email" type="email">
+                    <label for="order-price-select">Item</label><select class="idk" id="order-price-select"></select>
+                    <label for="order-service-type">Service</label><select class="idk" id="order-service-type"><option value="washing">Washing</option><option value="ironing">Ironing</option></select>
+                    <label for="order-item-qty">Qty</label><input class="idk" id="order-item-qty" type="number" min="1" value="1">
+                    <button type="button" class="but" id="add-order-item">Add Item</button>
+                    <ul id="order-item-list" class="order-item-list"></ul>
+                    <label for="order-discount">Discount</label><input class="idk" id="order-discount" type="number" min="0" value="0">
+                    <label for="order-paid">Amount Paid</label><input class="idk" id="order-paid" type="number" min="0" value="0">
+                    <label for="order-collection-date">Expected Collection</label><input class="idk" id="order-collection-date" type="datetime-local">
+                    <label for="order-notes">Order Notes</label><textarea class="idk" id="order-notes"></textarea>
+                    <p class="order-total-line">Subtotal: <strong id="order-subtotal">NGN 0</strong></p>
+                    <p class="order-total-line">Total: <strong id="order-total">NGN 0</strong> | Payment: <strong id="order-payment-status">unpaid</strong></p>
+                    <button class="but" type="submit">Create Order</button>
+                </form>
+                <div class="ops-card">
+                    <label for="order-search">Search orders</label><input class="idk" id="order-search" placeholder="Ticket, phone, status">
+                    <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Phone</th><th>Status</th><th>Total</th><th>Balance</th><th>Payment</th><th>Collection</th><th>Actions</th></tr></thead><tbody id="orders-table-body"></tbody></table></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sect ops-section" id="settings" data-aos="fade-up">
+            <div class="firt"><h1>Settings, FAQ, and Audit</h1></div>
+            <div class="ops-grid">
+                <form id="settings-form" class="ops-card">
+                    <label for="setting-hours">Business Hours</label><input class="idk" id="setting-hours">
+                    <label for="setting-payment">Payment Instructions</label><textarea class="idk" id="setting-payment"></textarea>
+                    <label for="setting-whatsapp">WhatsApp Number</label><input class="idk" id="setting-whatsapp">
+                    <button class="but" type="submit">Save Settings</button>
+                </form>
+                <form id="faq-form" class="ops-card">
+                    <label for="faq-question">FAQ Question</label><input class="idk" id="faq-question">
+                    <label for="faq-answer">FAQ Answer</label><textarea class="idk" id="faq-answer"></textarea>
+                    <label for="faq-order">Sort Order</label><input class="idk" id="faq-order" type="number" value="0">
+                    <button class="but" type="submit">Add FAQ</button>
+                </form>
+            </div>
+            <div class="table compact-table"><table><thead><tr><th>Question</th><th>Answer</th><th>Order</th><th>Status</th><th>Action</th></tr></thead><tbody id="faq-table-body"></tbody></table></div>
+            <div class="table compact-table"><table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Type</th><th>ID</th></tr></thead><tbody id="audit-table-body"></tbody></table></div>
         </section>
         <section class="sect invite-admin" id="invite" data-aos="fade-up">
             <div class="firt">
@@ -194,6 +277,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
         <script src="supabase-config.js" defer></script>
         <script src="admin.js" defer></script>
+        <script src="admin-ops.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" integrity="sha512-A7AYk1fGKX6S2SsHywmPkrnzTZHrgiVT7GcQkLGDe2ev0aWb8zejytzS8wjo7PGEXKqJOrjQ4oORtnimIRZBtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script>
             AOS.init({
@@ -202,3 +286,4 @@
         </script>
     </body>
 </html>
+

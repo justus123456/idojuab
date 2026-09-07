@@ -1,4 +1,4 @@
-﻿# Schema
+# Schema
 
 ## Database Provider
 
@@ -40,7 +40,7 @@ Run `scripts/supabase-security.sql` in Supabase to create/update these tables an
 
 | Column | Type | Notes |
 | --- | --- | --- |
-| `id` | uuid | Should match Supabase Auth user id. |
+| `id` | bigint identity | Existing profile identifier. Admin authorization matches the profile email to Supabase Auth. |
 | `username` | text | Optional display name. |
 | `email` | text | Unique; must match Supabase Auth email. |
 | `role` | text | `admin` or `user`. |
@@ -95,3 +95,7 @@ Run `scripts/supabase-security.sql` in Supabase to create/update these tables an
 | `admin_otp_requests` | No | No | No direct access | No direct access | Yes |
 | `admin_invite_audit` | No | No | Yes | No client writes | Yes |
 | `contact_rate_limits` | No | No | No direct access | No direct access | Yes |
+
+## Operations Tables
+
+The operational extension uses `customers`, `orders`, `order_items`, `business_settings`, `faqs`, and `audit_logs`. Admin-only operational tables are protected by RLS. Public users may read only active FAQs and safe business settings. Order totals are calculated from item quantity and snapshot unit price; collection and payment state are recorded on the order.

@@ -992,3 +992,23 @@ header .nav {
     width: 150px;
   }
 }
+
+/* Operations dashboard */
+.dashboard-summary, .ops-section { padding: 28px 4%; }
+.metric-grid { display: grid; grid-template-columns: repeat(6, minmax(120px, 1fr)); gap: 12px; margin: 18px 0; }
+.metric-grid > div, .ops-card { background: #fff; border: 1px solid #e1e1e1; box-shadow: 0 4px 14px rgba(0,0,0,.06); padding: 16px; }
+.metric-grid span, .metric-grid strong { display: block; }
+.metric-grid span { color: #666; font-size: 12px; }
+.metric-grid strong { margin-top: 8px; font-size: 20px; }
+.ops-grid { display: grid; grid-template-columns: minmax(260px, 360px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.ops-card label { display: block; margin-top: 10px; font-weight: 600; }
+.ops-card .idk { width: 100%; box-sizing: border-box; }
+.compact-table { overflow-x: auto; max-height: 430px; overflow-y: auto; }
+.compact-table table { min-width: 620px; }
+.export-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.order-item-list { padding-left: 20px; }
+.order-item-list li { margin: 6px 0; }
+.order-item-list button, .ops-card table button { margin-left: 8px; padding: 5px 8px; }
+.ops-section textarea { min-height: 70px; resize: vertical; }
+@media (max-width: 900px) { .metric-grid { grid-template-columns: repeat(3, 1fr); } .ops-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } .dashboard-summary, .ops-section { padding: 22px 4%; } .export-actions button { flex: 1 1 100%; } .ops-card { padding: 12px; } }

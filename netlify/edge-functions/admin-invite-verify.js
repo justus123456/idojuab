@@ -1,4 +1,4 @@
-﻿import {
+import {
   getClientIp,
   hashOtp,
   isValidEmail,
@@ -165,7 +165,6 @@ export default async (request) => {
     method: "POST",
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify({
-      id: userId,
       email: candidateEmail,
       username: candidateEmail.split("@")[0],
       role: "admin",

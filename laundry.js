@@ -292,6 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupEstimator();
     setupContactHelpers();
     setupLazyMap();
+    setupOperationsPublic(client);
 
     if (!client) {
         console.error("Supabase client not available.");
@@ -372,3 +373,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 5000);
     });
 });
+
+async function setupOperationsPublic(client) {
+    const result = document.getElementById("order-status-result");
+    const form = document.getElementById("order-status-form");
+    if (form && result) form.addEventListener("submit", async (event) => {
+        event.preventDefault(); const ticket = document.getElementById("order-ticket").value.trim().toUpperCase();
+        if (!ticket) return; result.textContent = "Checking...";
+        try { const response = await fetch(`/api/order-status?ticket=${encodeURIComponent(ticket)}`); const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Order not found.");
+            result.textContent = `${data.ticketNumber}: ${data.status}. Total ${formatPrice(data.total)}. Outstanding ${formatPrice(data.outstandingBalance)}${data.expectedCollectionAt ? `; collection target ${new Date(data.expectedCollectionAt).toLocaleString()}` : ""}.`;
+        } catch (error) { result.textContent = error.message; }
+    });
+    if (!client) return;
+    const settings = await client.from("business_settings").select("key,value").in("key", ["payment_instructions", "business_hours"]);
+    (settings.data || []).forEach((row) => { const target = row.key === "payment_instructions" ? document.getElementById("public-payment-instructions") : document.getElementById("public-business-hours"); if (target) target.textContent = row.value; });
+    const faqs = await client.from("faqs").select("question,answer").eq("is_active", true).order("sort_order");
+    const list = document.getElementById("public-faq-list");
+    if (list && faqs.data?.length) { list.textContent = ""; faqs.data.forEach((faq) => { const item = document.createElement("div"); item.className = "faq-item"; const button = document.createElement("button"); button.type = "button"; button.className = "faq-question"; button.setAttribute("aria-expanded", "false"); button.textContent = faq.question; const answer = document.createElement("div"); answer.className = "faq-answer"; const paragraph = document.createElement("p"); paragraph.textContent = faq.answer; answer.appendChild(paragraph); item.append(button, answer); list.appendChild(item); }); setupFaq(); }
+}

@@ -48,3 +48,9 @@ Companion documents:
 ## Deployment
 
 `netlify.toml` publishes the project root and maps all three API routes to Netlify Edge Functions. Required Netlify environment variables are listed in `.env.example`.
+
+## In-Store Operations Extension
+
+The application now supports customer records, walk-in orders, ticket numbers, item quantities, calculated subtotals/discounts/totals, payment balances, processing statuses, expected collection dates, and collection confirmation. Customers can check a ticket through `GET /api/order-status?ticket=...`; the endpoint exposes status and balance only and never exposes private customer fields.
+
+Admins can search customers and orders, change order status, copy a ready-for-collection WhatsApp message, mark messages as replied, export prices/messages/orders as CSV, manage public hours/payment instructions/FAQs, and review an audit log. This remains an in-store workflow and does not imply pickup or delivery.

@@ -77,7 +77,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       appendCell(row, `NGN ${item.ironingPrice}`);
       appendCell(row, `NGN ${item.washingPrice}`);
       appendCell(row, item.gender);
-
       const actionCell = document.createElement("td");
       const editButton = document.createElement("button");
       editButton.className = "edit-price";
@@ -110,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!tableBody) return;
 
     if (!messages.length) {
-      renderEmptyRow(tableBody, 5, "No messages found.");
+      renderEmptyRow(tableBody, 6, "No messages found.");
       return;
     }
 
@@ -122,7 +121,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       appendCell(row, msg.email ?? "");
       appendCell(row, msg.message ?? "");
       appendCell(row, msg.created_at ? new Date(msg.created_at).toLocaleString() : "-");
-
+      const statusCell = document.createElement("td");
+      const statusButton = document.createElement("button");
+      statusButton.className = "toggle-message-status";
+      statusButton.dataset.id = String(msg.id);
+      statusButton.dataset.replied = msg.is_replied ? "true" : "false";
+      statusButton.textContent = msg.is_replied ? "Replied" : "Mark replied";
+      statusCell.appendChild(statusButton);
+      row.appendChild(statusCell);
       const actionCell = document.createElement("td");
       const button = document.createElement("button");
       button.className = "delete-message";
@@ -397,7 +403,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       genderCell.appendChild(genderSelect);
       row.appendChild(genderCell);
-
       const actionCell = document.createElement("td");
       const actionWrap = document.createElement("div");
       actionWrap.className = "table-actions";
@@ -475,6 +480,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       } catch (error) {
         console.error("Error deleting price:", error);
       }
+      return;
+    }
+
+    const statusButton = event.target.closest(".toggle-message-status");
+    if (statusButton) {
+      const nextStatus = statusButton.dataset.replied !== "true";
+      const { error } = await client.from("messages").update({ is_replied: nextStatus }).eq("id", statusButton.dataset.id);
+      if (!error) await fetchMessages();
       return;
     }
 

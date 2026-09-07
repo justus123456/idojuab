@@ -54,6 +54,7 @@
                 <li><a href="#about" onclick="toggleMenu();">about</a></li>
                 <li><a href="#system" onclick="toggleMenu();">system</a></li>
                 <li><a href="#pricing" onclick="toggleMenu();">pricing</a></li>
+                <li><a href="#order-status" onclick="toggleMenu();">order status</a></li>
                 <li><a href="#faq" onclick="toggleMenu();">FAQ</a></li>
                 <li><a href="#contact" onclick="toggleMenu();">contact</a></li>
             </ul>
@@ -237,13 +238,25 @@
                 </div>
             </section>
 
+            <section class="order-status" id="order-status">
+                <div class="container">
+                    <div class="title"><h2 class="titleText">check <span>o</span>rder status</h2><p>Enter the ticket number given to you at drop-off.</p></div>
+                    <form id="order-status-form" class="status-form">
+                        <label for="order-ticket">Ticket number</label>
+                        <input id="order-ticket" required placeholder="LD-1042" autocomplete="off">
+                        <button type="submit">Check status</button>
+                    </form>
+                    <p id="order-status-result" class="status-result" aria-live="polite"></p>
+                    <p class="payment-note">Payment information: <span id="public-payment-instructions">Confirm cash, POS, or transfer details with staff.</span></p>
+                </div>
+            </section>
             <section class="faq" id="faq">
                 <div class="container">
                     <div class="title" data-aos="fade-up">
                         <h2 class="titleText"><span>F</span>AQ</h2>
                         <p>quick answers before you visit the shop</p>
                     </div>
-                    <div class="faq-list" data-aos="fade-up">
+                    <div class="faq-list" id="public-faq-list" data-aos="fade-up">
                         <div class="faq-item">
                             <button type="button" class="faq-question" aria-expanded="false">Do you offer pickup or delivery?</button>
                             <div class="faq-answer"><p>No. Drop-off and collection are in-store only at our Kubwa, Abuja shop.</p></div>
@@ -316,7 +329,7 @@
                             </div>
                             <div class="icons" data-aos="fade-up" data-aos-delay="400">
                                 <span>hours:</span>
-                                <p id="business-hours">Mon-Sat: 8:00 AM - 6:00 PM</p>
+                                <p id="business-hours"><span id="public-business-hours">Mon-Sat: 8:00 AM - 6:00 PM</span></p>
                             </div>
                         </div>
                     </div>
