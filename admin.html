@@ -104,6 +104,7 @@
                     <h3 class="titleText"><span>m</span>ale</h3>
                 </div>
             </div>
+            <div class="workspace-toolbar"><label for="price-search">Search price list<input id="price-search" type="search" placeholder="Cloth type"></label></div>
             <div class="table">
                 <table>
                     <thead>
@@ -183,6 +184,16 @@
                 <div><span>Today Revenue</span><strong id="metric-revenue-today">NGN 0</strong></div>
                 <div><span>This Month</span><strong id="metric-revenue-month">NGN 0</strong></div>
             </div>
+            <div class="dashboard-split">
+                <div class="dashboard-recent">
+                    <h2>Recent orders</h2>
+                    <table><thead><tr><th>Ticket</th><th>Customer</th><th>Status</th><th>Total</th><th>Created</th></tr></thead><tbody id="dashboard-orders-body"></tbody></table>
+                </div>
+                <div>
+                    <h2>Needs attention</h2>
+                    <ul id="dashboard-alerts" class="dashboard-alerts"></ul>
+                </div>
+            </div>
             <div class="ops-card"><h2>Popular services</h2><ul id="popular-services"></ul></div>
             <div class="export-actions">
                 <button type="button" id="export-prices">Export Prices</button>
@@ -193,6 +204,7 @@
 
         <section class="sect ops-section admin-page" id="customers" data-admin-page="customers" data-aos="fade-up">
             <div class="firt"><h1>Customer Records</h1></div>
+            <div class="workspace-toolbar"><label><input id="customer-returning-only" type="checkbox"> Returning customers only</label></div>
             <div class="ops-grid">
                 <form id="customer-form" class="ops-card">
                     <label for="customer-name">Full Name</label><input class="idk" id="customer-name" required>
@@ -211,6 +223,7 @@
 
         <section class="sect ops-section admin-page" id="orders" data-admin-page="orders" data-aos="fade-up">
             <div class="firt"><h1>Orders and Tickets</h1></div>
+            <div class="workspace-toolbar"><label for="order-status-filter">Order status<select id="order-status-filter"><option value="">All statuses</option><option value="received">Received</option><option value="washing">Washing</option><option value="ironing">Ironing</option><option value="packaging">Packaging</option><option value="ready">Ready</option><option value="collected">Collected</option><option value="cancelled">Cancelled</option></select></label><label><input id="order-balance-only" type="checkbox"> Outstanding balance only</label></div>
             <div class="ops-grid">
                 <form id="order-form" class="ops-card">
                     <label for="order-customer-name">Customer Name</label><input class="idk" id="order-customer-name" required>
@@ -237,7 +250,7 @@
         </section>
 
         <section class="sect ops-section admin-page" id="settings" data-admin-page="settings" data-aos="fade-up">
-            <div class="firt"><h1>Settings, FAQ, and Audit</h1></div>
+            <div class="firt"><h1>Settings, FAQ, and Audit</h1><button type="button" class="section-action but" id="refresh-operations">Refresh data</button></div>
             <div class="ops-grid">
                 <form id="settings-form" class="ops-card">
                     <label for="setting-hours">Business Hours</label><input class="idk" id="setting-hours">
@@ -267,6 +280,7 @@
                     </div>
                     <input class="but" type="submit" value="Send">
                     <p id="invite-message" class="admin-feedback" aria-live="polite"></p>
+                    <div class="invite-tools"><label for="onboarding-link">Onboarding link</label><input id="onboarding-link" class="idk" readonly><button type="button" class="but" id="copy-onboarding-link">Copy link</button></div>
                 </form>
                 <a href="admin-invite.html">
                     <button class="buts">Open Invite Page</button>
