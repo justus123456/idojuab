@@ -38,7 +38,8 @@ async function handleInviteRequest(request) {
   }
 
   const admin = await getAdminProfile(caller.email);
-  if (!admin) {
+  const invitingAdminId = caller.id;
+  if (!admin || !invitingAdminId) {
     return jsonResponse(403, { error: "Invite request is not allowed." });
   }
 
@@ -57,13 +58,13 @@ async function handleInviteRequest(request) {
   const now = new Date();
   const hourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
   const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const adminCount = await countRecentInvites(`invited_by=eq.${encodeURIComponent(admin.id)}`, hourAgo);
+  const adminCount = await countRecentInvites(`invited_by=eq.${encodeURIComponent(invitingAdminId)}`, hourAgo);
   const emailCount = await countRecentInvites(`candidate_email=eq.${encodeURIComponent(candidateEmail)}`, dayAgo);
 
   if (adminCount >= 5 || emailCount >= 3) {
     await writeAudit("invite_rate_limited", {
       candidateEmail,
-      invitingAdminId: admin.id,
+      invitingAdminId,
       ipAddress,
       outcomeDetail: "request_limit",
     });
@@ -88,16 +89,17 @@ async function handleInviteRequest(request) {
       candidate_email: candidateEmail,
       otp_hash: otpHash,
       otp_salt: salt,
-      invited_by: admin.id,
+      invited_by: invitingAdminId,
       expires_at: expiresAt,
       requested_ip: ipAddress,
     }),
   });
 
   if (!insertResponse.ok) {
+    console.error("OTP invite insert failed:", insertResponse.status, await insertResponse.text().catch(() => ""));
     await writeAudit("invite_verify_failure", {
       candidateEmail,
-      invitingAdminId: admin.id,
+      invitingAdminId,
       ipAddress,
       outcomeDetail: "otp_insert_failed",
     });
@@ -107,7 +109,7 @@ async function handleInviteRequest(request) {
   const emailSent = await sendOtpEmail(candidateEmail, otp);
   await writeAudit("invite_requested", {
     candidateEmail,
-    invitingAdminId: admin.id,
+    invitingAdminId,
     ipAddress,
     outcomeDetail: emailSent ? "email_sent" : "email_failed",
   });

@@ -34,6 +34,7 @@ export function requireServerConfig() {
   if (!SUPABASE_ANON_KEY) missing.push("SUPABASE_ANON_KEY");
   if (!SUPABASE_SERVICE_ROLE_KEY) missing.push("SUPABASE_SERVICE_ROLE_KEY");
   if (!OTP_PEPPER) missing.push("OTP_PEPPER");
+  if (!RESEND_API_KEY) missing.push("RESEND_API_KEY");
 
   if (missing.length > 0) {
     console.error(`Server invite configuration is missing: ${missing.join(", ")}`);
@@ -126,18 +127,9 @@ export async function writeAudit(eventType, details) {
 export async function sendOtpEmail(candidateEmail, otp) {
   const siteUrl = SITE_URL.replace(/\/$/, "");
   const onboardingUrl = `${siteUrl}/admin-onboarding.html?email=${encodeURIComponent(candidateEmail)}`;
-
-  if (!RESEND_API_KEY) {
-    console.warn(`Admin OTP for ${candidateEmail}: ${otp}`);
-    return true;
-  }
-
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "content-type": "application/json" },
     body: JSON.stringify({
       from: OTP_EMAIL_FROM,
       to: candidateEmail,
@@ -145,8 +137,6 @@ export async function sendOtpEmail(candidateEmail, otp) {
       text: `Your Idojuan Laundry admin setup code is ${otp}. It expires in 10 minutes. Open ${onboardingUrl} to finish setup.`,
     }),
   });
-
+  if (!response.ok) console.error("Resend OTP delivery failed:", response.status, await response.text().catch(() => ""));
   return response.ok;
 }
-
-

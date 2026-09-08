@@ -244,7 +244,7 @@
                 </form>
                 <div class="ops-card">
                     <label for="order-search">Search orders</label><input class="idk" id="order-search" placeholder="Ticket, phone, status">
-                    <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Phone</th><th>Status</th><th>Total</th><th>Balance</th><th>Payment</th><th>Collection</th><th>Actions</th></tr></thead><tbody id="orders-table-body"></tbody></table></div>
+                    <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Phone</th><th>Status</th><th>Total</th><th>Balance</th><th>Payment</th><th>Collection</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="orders-table-body"></tbody></table></div>
                 </div>
             </div>
         </section>
@@ -256,6 +256,13 @@
                     <label for="setting-hours">Business Hours</label><input class="idk" id="setting-hours">
                     <label for="setting-payment">Payment Instructions</label><textarea class="idk" id="setting-payment"></textarea>
                     <label for="setting-whatsapp">WhatsApp Number</label><input class="idk" id="setting-whatsapp">
+                    <label for="setting-business-name">Business Name</label><input class="idk" id="setting-business-name">
+                    <label for="setting-address">Business Address</label><textarea class="idk" id="setting-address"></textarea>
+                    <label for="setting-email">Business Email</label><input class="idk" id="setting-email" type="email">
+                    <label for="setting-phone">Business Phone</label><input class="idk" id="setting-phone">
+                    <label for="setting-map-url">Google Maps Link</label><input class="idk" id="setting-map-url" type="url">
+                    <label for="setting-turnaround-hours">Default Turnaround Hours</label><input class="idk" id="setting-turnaround-hours" type="number" min="1">
+                    <label for="setting-ready-template">Ready Notification Template</label><textarea class="idk" id="setting-ready-template" placeholder="Use {{customer_name}}, {{ticket_number}}, {{outstanding_balance}}, {{business_hours}}"></textarea>
                     <button class="but" type="submit">Save Settings</button>
                 </form>
                 <form id="faq-form" class="ops-card">
@@ -267,6 +274,8 @@
             </div>
             <div class="table compact-table"><table><thead><tr><th>Question</th><th>Answer</th><th>Order</th><th>Status</th><th>Action</th></tr></thead><tbody id="faq-table-body"></tbody></table></div>
             <div class="table compact-table"><table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Type</th><th>ID</th></tr></thead><tbody id="audit-table-body"></tbody></table></div>
+            <div class="security-overview"><div><span>Signed-in admin</span><strong id="security-session-email">Loading...</strong></div><div><span>Access control</span><strong>Supabase admin role + RLS</strong></div><div><span>Security activity</span><strong>Recorded in audit log</strong></div></div>
+            <div class="table compact-table"><table><thead><tr><th>Admin</th><th>Email</th><th>Role</th><th>Provisioned By</th><th>Created</th></tr></thead><tbody id="admin-table-body"></tbody></table></div>
         </section>
         <section class="sect invite-admin admin-page" id="invite" data-admin-page="invite" data-aos="fade-up">
             <div class="firt">

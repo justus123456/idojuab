@@ -170,6 +170,7 @@ using (lower(email) = lower(auth.email()) or public.is_admin());
 drop policy if exists "admin audit admin read" on public.admin_invite_audit;
 create policy "admin audit admin read"
 on public.admin_invite_audit
+
 for select
 to authenticated
 using (public.is_admin());
@@ -258,7 +259,14 @@ insert into public.business_settings (key, value)
 values
   ('business_hours', 'Mon-Sat: 8:00 AM - 6:00 PM'),
   ('payment_instructions', 'Payment is accepted in-store. Please confirm cash, POS, or transfer details with staff before collection.'),
-  ('whatsapp_number', '2348063894359')
+  ('whatsapp_number', '2348063894359'),
+  ('business_name', 'Idojuan Laundry and Dry Cleaning Services'),
+  ('business_address', 'Mosque shop 7 beside Ogab Services, Gado Nasko road 2/1, Kubwa, Abuja'),
+  ('business_email', 'Idoresltd@yahoo.com'),
+  ('business_phone', '08063894359'),
+  ('business_map_url', 'https://www.google.com/maps/search/?api=1&query=Idojuan%20Laundry%20Kubwa%20Abuja'),
+  ('default_turnaround_hours', '48'),
+  ('ready_notification_template', 'Hello {{customer_name}}, your laundry order {{ticket_number}} is ready for collection. Your outstanding balance is {{outstanding_balance}}. You can collect during {{business_hours}}.')
 on conflict (key) do nothing;
 
 insert into public.faqs (question, answer, sort_order)
