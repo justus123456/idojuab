@@ -124,8 +124,12 @@ export async function writeAudit(eventType, details) {
   }).catch(() => {});
 }
 
-export async function sendOtpEmail(candidateEmail, otp) {
-  const siteUrl = SITE_URL.replace(/\/$/, "");
+export async function sendOtpEmail(candidateEmail, otp, requestOrigin = "") {
+  const siteUrl = (SITE_URL || requestOrigin).replace(/\/$/, "");
+  if (!siteUrl) {
+    console.error("OTP email cannot be sent without a public site URL.");
+    return false;
+  }
   const onboardingUrl = `${siteUrl}/admin-onboarding.html?email=${encodeURIComponent(candidateEmail)}`;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

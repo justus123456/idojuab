@@ -106,7 +106,7 @@ async function handleInviteRequest(request) {
     return jsonResponse(502, { error: "Invite request failed." });
   }
 
-  const emailSent = await sendOtpEmail(candidateEmail, otp);
+  const emailSent = await sendOtpEmail(candidateEmail, otp, new URL(request.url).origin);
   await writeAudit("invite_requested", {
     candidateEmail,
     invitingAdminId,
