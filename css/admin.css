@@ -1150,3 +1150,18 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .security-overview span { color: #77818b; font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .security-overview strong { margin-top: 6px; color: #26313b; font-size: 13px; font-weight: 600; text-transform: none; word-break: break-word; }
 @media (max-width: 650px) { .security-overview { grid-template-columns: 1fr; gap: 16px; } }
+/* Lean business dashboard */
+.dashboard-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.revenue-chart { display: grid; grid-template-columns: repeat(7, minmax(42px, 1fr)); align-items: end; gap: 10px; height: 210px; border-bottom: 1px solid #cfd6dc; padding: 12px 0; }
+.revenue-chart div { display: grid; grid-template-rows: auto 1fr auto; gap: 7px; height: 100%; min-width: 0; color: #77808a; font-size: 10px; text-align: center; }
+.revenue-chart i { align-self: end; display: block; min-height: 8px; background: #687782; border-radius: 3px 3px 0 0; }
+.revenue-chart b { overflow: hidden; color: #303a42; font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.pipeline { max-width: 1400px; margin: 0 auto 34px; border-top: 1px solid #dfe3e8; border-bottom: 1px solid #dfe3e8; padding: 22px 0; }
+.pipeline h2 { margin: 0 0 15px; font-size: 17px; }
+.pipeline-actions, .quick-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.pipeline-actions button, .quick-actions a { border: 1px solid #d5dce1; border-radius: 6px; background: transparent; color: #33404a; cursor: pointer; font: inherit; font-size: 13px; padding: 10px 13px; text-decoration: none; }
+.pipeline-actions button:hover, .quick-actions a:hover { background: #e9edf0; }
+.pipeline-actions span { display: inline-grid; place-items: center; min-width: 21px; height: 21px; margin-left: 8px; border-radius: 50%; background: #26323b; color: #fff; font-size: 11px; }
+.quick-actions { max-width: 1400px; margin: 0 auto 24px; }
+.popular-services p { border-bottom: 1px solid #e1e6e9; color: #4c5760; font-size: 13px; margin: 0; padding: 12px 0; }
+@media (max-width: 800px) { .dashboard-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .revenue-chart { gap: 5px; } .revenue-chart b { display: none; } }

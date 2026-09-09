@@ -22,11 +22,10 @@
     render(results[8].data || []); fillPriceSelect();
   }
   function render(audits) {
-    text('metric-prices', state.prices.length); text('metric-messages', state.messages.filter((m) => !m.is_replied).length);
     const now = new Date(), day = new Date(now.getFullYear(), now.getMonth(), now.getDate()), month = new Date(now.getFullYear(), now.getMonth(), 1);
     const today = state.orders.filter((o) => new Date(o.created_at) >= day), monthly = state.orders.filter((o) => new Date(o.created_at) >= month);
-    text('metric-today-orders', today.length); text('metric-ready-orders', state.orders.filter((o) => o.status === 'ready').length);
-    text('metric-revenue-today', money(today.reduce((n, o) => n + Number(o.total), 0))); text('metric-revenue-month', money(monthly.reduce((n, o) => n + Number(o.total), 0)));
+    const pending = state.orders.filter((o) => !['collected', 'cancelled'].includes(o.status)); const outstanding = state.orders.reduce((sum, o) => sum + Math.max(0, Number(o.total) - Number(o.amount_paid)), 0);
+    text('metric-total-orders', state.orders.length); text('metric-pending-orders', pending.length); text('metric-ready-orders', state.orders.filter((o) => o.status === 'ready').length); text('metric-outstanding', money(outstanding)); text('metric-today-orders', today.length); text('metric-revenue-today', money(today.reduce((n, o) => n + Number(o.amount_paid), 0))); text('metric-revenue-month', money(monthly.reduce((n, o) => n + Number(o.amount_paid), 0))); text('metric-customers', state.customers.length);
     renderCustomers(); renderOrders(); renderDashboard(); renderSettings(); renderAdmins(); renderSecurity(); renderFaqs(); renderAudits(audits);
     const popular = {}; state.items.forEach((i) => { popular[i.item_name] = (popular[i.item_name] || 0) + Number(i.quantity); }); const list = el('popular-services');
     if (list) { list.textContent = ''; Object.entries(popular).sort((a, b) => b[1] - a[1]).slice(0, 5).forEach(([name, qty]) => { const li = document.createElement('li'); li.textContent = `${name}: ${qty} items`; list.appendChild(li); }); }
@@ -62,6 +61,7 @@
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'delete-order'; remove.textContent = 'Delete order'; remove.onclick = () => deleteOrder(o); cell.appendChild(remove);
     });
   }
+  function renderPopularServices() { const list = el('popular-services'); if (!list) return; const popular = {}; state.items.forEach((item) => { const record = popular[item.item_name] || { quantity: 0, revenue: 0 }; record.quantity += Number(item.quantity); record.revenue += Number(item.line_total); popular[item.item_name] = record; }); list.textContent = ''; Object.entries(popular).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5).forEach(([name, value]) => { const row = document.createElement('p'); row.textContent = name + " - " + value.quantity + " item(s) - " + money(value.revenue); list.appendChild(row); }); }
   function renderDashboard() {
     const alerts = el('dashboard-alerts');
     if (alerts) { alerts.textContent = ''; const items = [
@@ -69,8 +69,10 @@
       `${state.orders.filter((o) => Number(o.total || 0) > Number(o.amount_paid || 0)).length} order(s) with an outstanding balance`,
       `${state.messages.filter((m) => !m.is_replied).length} unread customer message(s)`
     ]; items.forEach((value) => { const li = document.createElement('li'); li.textContent = value; alerts.appendChild(li); }); }
-    const body = el('dashboard-orders-body'); if (!body) return; body.textContent = '';
-    state.orders.slice(0, 5).forEach((o) => { const row = body.insertRow(); rowValues(row, [o.ticket_number, o.customers?.full_name || '', o.status, money(o.total), new Date(o.created_at).toLocaleDateString()]); });
+    ['received', 'washing', 'ironing', 'ready', 'collected'].forEach((status) => text(`pipeline-${status}`, state.orders.filter((order) => order.status === status).length));
+    const chart = el('revenue-chart');
+    if (chart) { chart.textContent = ''; const days = Array.from({ length: 7 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - (6 - index)); date.setHours(0, 0, 0, 0); return date; }); const values = days.map((date) => state.orders.filter((order) => { const created = new Date(order.created_at); return created >= date && created < new Date(date.getTime() + 86400000); }).reduce((sum, order) => sum + Number(order.amount_paid || 0), 0)); const highest = Math.max(...values, 1); values.forEach((value, index) => { const bar = document.createElement('div'); bar.innerHTML = `<span>${days[index].toLocaleDateString('en-NG', { weekday: 'short' })}</span><i style="height:${Math.max(8, Math.round((value / highest) * 100))}%"></i><b>${money(value)}</b>`; chart.appendChild(bar); }); }    const body = el('dashboard-orders-body'); if (!body) return; body.textContent = '';
+    state.orders.slice(0, 5).forEach((o) => { const row = body.insertRow(); rowValues(row, [o.ticket_number, o.customers?.full_name || '', o.status, o.payment_status, money(o.total), new Date(o.created_at).toLocaleDateString()]); });
   }
   function renderSettings() {
     const fields = {
@@ -174,7 +176,9 @@
     });
     el('faq-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const { error } = await db.from('faqs').insert({ question: el('faq-question').value.trim(), answer: el('faq-answer').value.trim(), sort_order: Number(el('faq-order').value || 0) }); if (error) return message(error.message, true); event.target.reset(); await load(); message('FAQ added.'); });
     if (el('onboarding-link')) el('onboarding-link').value = window.location.origin + '/admin-onboarding.html'; el('copy-onboarding-link')?.addEventListener('click', async () => { const link = el('onboarding-link')?.value; if (!link) return; try { await navigator.clipboard.writeText(link); message('Onboarding link copied.'); } catch { window.prompt('Copy onboarding link:', link); } });
-    el('export-prices')?.addEventListener('click', () => exportCsv('prices.csv', state.prices)); el('export-orders')?.addEventListener('click', () => exportCsv('orders.csv', state.orders)); el('export-messages')?.addEventListener('click', async () => { const { data } = await db.from('messages').select('*').order('id', { ascending: false }); exportCsv('messages.csv', data || []); });
+    el('refresh-dashboard')?.addEventListener('click', () => load().then(() => message('Dashboard refreshed.')).catch((error) => message(error.message, true)));
+    document.querySelectorAll('[data-pipeline-status]').forEach((button) => button.addEventListener('click', () => { const filter = el('order-status-filter'); if (filter) filter.value = button.dataset.pipelineStatus; window.location.hash = 'orders'; renderOrders(); }));
+    document.querySelectorAll('[data-dashboard-page]').forEach((link) => link.addEventListener('click', () => { window.location.hash = link.dataset.dashboardPage; }));    el('export-prices')?.addEventListener('click', () => exportCsv('prices.csv', state.prices)); el('export-orders')?.addEventListener('click', () => exportCsv('orders.csv', state.orders)); el('export-customers')?.addEventListener('click', () => exportCsv('customers.csv', state.customers)); el('export-revenue')?.addEventListener('click', () => exportCsv('revenue.csv', state.orders.map((order) => ({ ticket_number: order.ticket_number, date: order.created_at, total: order.total, amount_paid: order.amount_paid, outstanding: Math.max(0, Number(order.total) - Number(order.amount_paid)), status: order.status })))); el('export-messages')?.addEventListener('click', async () => { const { data } = await db.from('messages').select('*').order('id', { ascending: false }); exportCsv('messages.csv', data || []); });
   }
   document.addEventListener('DOMContentLoaded', async () => { const { data } = await db.auth.getSession(); if (!data.session) return; bind(); try { await load(); } catch (error) { message(`Operations data could not load: ${error.message}`, true); } });
 })();
