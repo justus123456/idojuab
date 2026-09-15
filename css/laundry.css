@@ -1379,3 +1379,4 @@ body {
 .status-form button { min-height: 44px; padding: 0 18px; background: #1f1f1f; color: #fff; border: 0; cursor: pointer; }
 .status-result, .payment-note { max-width: 640px; margin: 12px auto; line-height: 1.6; }
 @media (max-width: 520px) { .status-form { grid-template-columns: 1fr; } .status-form button { width: 100%; } }
+.contact-honeypot { position: absolute !important; left: -10000px !important; width: 1px; height: 1px; overflow: hidden; }

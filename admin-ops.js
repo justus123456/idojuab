@@ -125,10 +125,16 @@
       window.prompt('Copy notification:', note);
     }
   }  async function saveFaq(faq, changes) { const { error } = await db.from('faqs').update(changes).eq('id', faq.id); if (error) return message(error.message, true); await audit('Updated FAQ', 'faq', faq.id, faq, changes); await load(); }
-  function exportCsv(filename, rows) { if (!rows.length) return message('Nothing to export.'); const keys = Object.keys(rows[0]); const csv = [keys.join(','), ...rows.map((r) => keys.map((k) => String(r[k] ?? '').replaceAll(',', ' ')).join(','))].join(String.fromCharCode(10)); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = filename; link.click(); URL.revokeObjectURL(link.href); }
-  function filterPriceRows() {
-    const query = (el('price-search')?.value || '').trim().toLowerCase();
-    document.querySelectorAll('#pricing .dat tr, #pricing-female .dats tr').forEach((row) => { row.hidden = Boolean(query) && !row.textContent.toLowerCase().includes(query); });
+  function exportCsv(filename, rows) {
+    if (!rows.length) return message('Nothing to export.');
+    const escapeCell = (value) => {
+      let cell = String(value ?? '');
+      if (/^[=+\-@]/.test(cell)) cell = `'${cell}`;
+      return `"${cell.replaceAll('"', '""')}"`;
+    };
+    const keys = Object.keys(rows[0]);
+    const csv = [keys.map(escapeCell).join(','), ...rows.map((row) => keys.map((key) => escapeCell(row[key])).join(','))].join(String.fromCharCode(10));
+    const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = filename; link.click(); URL.revokeObjectURL(link.href);
   }  function bind() {
     state.pending = [];
     el('customer-search')?.addEventListener('input', renderCustomers); el('customer-returning-only')?.addEventListener('change', renderCustomers); el('order-search')?.addEventListener('input', renderOrders); el('order-status-filter')?.addEventListener('change', renderOrders); el('order-balance-only')?.addEventListener('change', renderOrders); el('price-search')?.addEventListener('input', filterPriceRows); el('refresh-operations')?.addEventListener('click', () => load().then(() => message('Data refreshed.')).catch((error) => message(error.message, true))); el('order-discount')?.addEventListener('input', totals); el('order-paid')?.addEventListener('input', totals);
@@ -136,34 +142,29 @@
     el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const { error } = await db.from('customers').upsert(row, { onConflict: 'phone' }); if (error) return message(error.message, true); event.target.reset(); await load(); message('Customer saved.'); });
     el('order-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (state.creatingOrder) return;
       if (!state.pending.length) return message('Add at least one item first.', true);
-      const t = totals();
-      const customerPayload = {
-        full_name: el('order-customer-name').value.trim(),
-        phone: el('order-customer-phone').value.trim(),
-        email: el('order-customer-email').value.trim().toLowerCase() || null
-      };
-      const customerWrite = await db.from('customers').upsert(customerPayload, { onConflict: 'phone' });
-      if (customerWrite.error) return message(customerWrite.error.message, true);
-      const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).maybeSingle();
-      if (customerRead.error || !customerRead.data?.id) return message('Customer could not be loaded. Confirm the operations SQL and admin RLS policies are installed.', true);
-      const ticket = `LD-${Date.now().toString().slice(-6)}`;
-      const current = await profile();
-      const orderWrite = await db.from('orders').insert({
-        ticket_number: ticket, customer_id: customerRead.data.id, subtotal: t.subtotal, discount: t.discount,
-        total: t.total, amount_paid: t.paid, payment_status: t.paid >= t.total ? 'paid' : t.paid ? 'partial' : 'unpaid',
-        created_by: current.profile?.id || null,
-        expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(),
-        notes: el('order-notes').value.trim()
-      }).select().maybeSingle();
-      if (orderWrite.error || !orderWrite.data?.id) return message(orderWrite.error?.message || 'Order could not be created. Check the operations SQL and RLS policies.', true);
-      const items = state.pending.map((item) => ({ ...item, order_id: orderWrite.data.id }));
-      const itemsWrite = await db.from('order_items').insert(items);
-      if (itemsWrite.error) return message(itemsWrite.error.message, true);
-      await audit('Created order', 'order', orderWrite.data.id, null, { ticket_number: ticket, total: t.total });
-      event.target.reset(); state.pending = []; renderPending(); await load(); message(`Order ${ticket} created.`);
-    });
-    el('settings-form')?.addEventListener('submit', async (event) => {
+      state.creatingOrder = true;
+      const submitButton = event.submitter;
+      if (submitButton) submitButton.disabled = true;
+      try {
+        const t = totals();
+        const customerPayload = { full_name: el('order-customer-name').value.trim(), phone: el('order-customer-phone').value.trim(), email: el('order-customer-email').value.trim().toLowerCase() || null };
+        const customerWrite = await db.from('customers').upsert(customerPayload, { onConflict: 'phone' });
+        if (customerWrite.error) return message(customerWrite.error.message, true);
+        const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).maybeSingle();
+        if (customerRead.error || !customerRead.data?.id) return message('Customer could not be loaded. Confirm the operations SQL and admin RLS policies are installed.', true);
+        const ticket = `LD-${crypto.randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
+        const current = await profile();
+        const submissionKey = crypto.randomUUID();
+        const orderWrite = await db.from('orders').insert({ submission_key: submissionKey, ticket_number: ticket, customer_id: customerRead.data.id, subtotal: t.subtotal, discount: t.discount, total: t.total, amount_paid: t.paid, payment_status: t.paid >= t.total ? 'paid' : t.paid ? 'partial' : 'unpaid', created_by: current.profile?.id || null, expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), notes: el('order-notes').value.trim() }).select().maybeSingle();
+        if (orderWrite.error || !orderWrite.data?.id) return message(orderWrite.error?.message || 'Order could not be created. Check the operations SQL and RLS policies are installed.', true);
+        const itemsWrite = await db.from('order_items').insert(state.pending.map((item) => ({ ...item, order_id: orderWrite.data.id })));
+        if (itemsWrite.error) return message(itemsWrite.error.message, true);
+        await audit('Created order', 'order', orderWrite.data.id, null, { ticket_number: ticket, total: t.total });
+        event.target.reset(); state.pending = []; renderPending(); await load(); message(`Order ${ticket} created.`);
+      } finally { state.creatingOrder = false; if (submitButton) submitButton.disabled = false; }
+    });    el('settings-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const rows = [
         ['business_hours', el('setting-hours').value], ['payment_instructions', el('setting-payment').value], ['whatsapp_number', el('setting-whatsapp').value],

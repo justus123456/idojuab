@@ -344,6 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const nameInput = document.getElementById("name");
         const emailInput = document.getElementById("mail");
         const messageInput = document.getElementById("info");
+        const websiteInput = document.getElementById("website");
 
         if (!nameInput || !emailInput || !messageInput || !successMessage) return;
 
@@ -356,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = await fetch("/api/contact", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, message }),
+            body: JSON.stringify({ name, email, message, website: websiteInput?.value || "" }),
         });
 
         if (!response.ok) {
@@ -382,7 +383,7 @@ async function setupOperationsPublic(client) {
         if (!ticket) return; result.textContent = "Checking...";
         try { const response = await fetch(`/api/order-status?ticket=${encodeURIComponent(ticket)}`); const data = await response.json();
             if (!response.ok) throw new Error(data.error || "Order not found.");
-            result.textContent = `${data.ticketNumber}: ${data.status}. Total ${formatPrice(data.total)}. Outstanding ${formatPrice(data.outstandingBalance)}${data.expectedCollectionAt ? `; collection target ${new Date(data.expectedCollectionAt).toLocaleString()}` : ""}.`;
+            result.textContent = `${data.ticketNumber}: ${data.status}${data.expectedCollectionAt ? `; collection target ${new Date(data.expectedCollectionAt).toLocaleString()}` : ""}.`;
         } catch (error) { result.textContent = error.message; }
     });
     if (!client) return;

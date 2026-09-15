@@ -208,6 +208,11 @@ create table if not exists public.orders (
   updated_at timestamptz not null default now()
 );
 
+-- Prevent an accidental replay from creating a second walk-in ticket.
+alter table public.orders add column if not exists submission_key uuid;
+create unique index if not exists orders_submission_key_unique
+  on public.orders (submission_key)
+  where submission_key is not null;
 create table if not exists public.order_items (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.orders(id) on delete cascade,

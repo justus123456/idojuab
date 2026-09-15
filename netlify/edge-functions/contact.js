@@ -79,6 +79,10 @@ export default async (request) => {
     return jsonResponse(400, { error: "Invalid JSON payload." });
   }
 
+  if (normalizeText(payload?.website, 200)) {
+    return jsonResponse(400, { error: "Message submission failed." });
+  }
+
   const name = normalizeText(payload?.name, 80);
   const email = normalizeText(payload?.email, 120).toLowerCase();
   const message = normalizeText(payload?.message, 2000);

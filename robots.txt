@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin-invite.html
+Disallow: /admin-onboarding.html
+Disallow: /login.html
+Disallow: /signup.html
+Sitemap: https://idojuan-laundry.netlify.app/sitemap.xml

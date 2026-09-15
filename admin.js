@@ -298,15 +298,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       const ironingPrice = document.getElementById("price-ironing").value.trim();
       const washingPrice = document.getElementById("price-washing").value.trim();
 
-      if (!clothType || !ironingPrice || !washingPrice) return;
+      const ironingAmount = Number(ironingPrice);
+      const washingAmount = Number(washingPrice);
+      if (!clothType || !Number.isFinite(ironingAmount) || !Number.isFinite(washingAmount) || ironingAmount < 0 || washingAmount < 0 || ironingAmount > 100000 || washingAmount > 100000) { window.alert('Enter a cloth type and prices between NGN 0 and NGN 100,000.'); return; }
+      const existingMale = await client.from('prices').select('id').eq('gender', 'Male').ilike('cloth_type', clothType).maybeSingle();
+      if (existingMale.data) { window.alert('A Male price row already exists for this item. Edit the existing row instead of adding another.'); return; }
 
       try {
         const { error } = await client
           .from('prices')
           .insert({
             cloth_type: clothType,
-            ironing_price: Number(ironingPrice),
-            washing_price: Number(washingPrice),
+            ironing_price: ironingAmount,
+            washing_price: washingAmount,
             gender: "Male"
         });
 
@@ -332,15 +336,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       const ironingPrice = document.getElementById("ironing").value.trim();
       const washingPrice = document.getElementById("washing").value.trim();
 
-      if (!clothType || !ironingPrice || !washingPrice) return;
+      const ironingAmount = Number(ironingPrice);
+      const washingAmount = Number(washingPrice);
+      if (!clothType || !Number.isFinite(ironingAmount) || !Number.isFinite(washingAmount) || ironingAmount < 0 || washingAmount < 0 || ironingAmount > 100000 || washingAmount > 100000) { window.alert('Enter a cloth type and prices between NGN 0 and NGN 100,000.'); return; }
+      const existingFemale = await client.from('prices').select('id').eq('gender', 'Female').ilike('cloth_type', clothType).maybeSingle();
+      if (existingFemale.data) { window.alert('A Female price row already exists for this item. Edit the existing row instead of adding another.'); return; }
 
       try {
         const { error } = await client
           .from('prices')
           .insert({
             cloth_type: clothType,
-            ironing_price: Number(ironingPrice),
-            washing_price: Number(washingPrice),
+            ironing_price: ironingAmount,
+            washing_price: washingAmount,
             gender: "Female"
         });
 

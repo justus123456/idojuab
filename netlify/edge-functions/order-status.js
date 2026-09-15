@@ -47,7 +47,7 @@ export default async (request) => {
   }
 
   const params = new URLSearchParams({
-    select: "ticket_number,status,total,amount_paid,payment_status,expected_collection_at,ready_at,collected_at,customers(full_name)",
+    select: "ticket_number,status,expected_collection_at,ready_at,collected_at",
     ticket_number: `eq.${ticket}`,
     limit: "1",
   });
@@ -64,8 +64,6 @@ export default async (request) => {
     return jsonResponse(404, { error: "No order found for that ticket number." });
   }
 
-  const total = Number(order.total || 0);
-  const paid = Number(order.amount_paid || 0);
 
   return jsonResponse(200, {
     ticketNumber: order.ticket_number,
