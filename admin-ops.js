@@ -26,9 +26,8 @@
     const today = state.orders.filter((o) => new Date(o.created_at) >= day), monthly = state.orders.filter((o) => new Date(o.created_at) >= month);
     const pending = state.orders.filter((o) => !['collected', 'cancelled'].includes(o.status)); const outstanding = state.orders.reduce((sum, o) => sum + Math.max(0, Number(o.total) - Number(o.amount_paid)), 0);
     text('metric-total-orders', state.orders.length); text('metric-pending-orders', pending.length); text('metric-ready-orders', state.orders.filter((o) => o.status === 'ready').length); text('metric-outstanding', money(outstanding)); text('metric-today-orders', today.length); text('metric-revenue-today', money(today.reduce((n, o) => n + Number(o.amount_paid), 0))); text('metric-revenue-month', money(monthly.reduce((n, o) => n + Number(o.amount_paid), 0))); text('metric-customers', state.customers.length);
-    renderCustomers(); renderOrders(); renderDashboard(); renderSettings(); renderAdmins(); renderSecurity(); renderFaqs(); renderAudits(audits);
-    const popular = {}; state.items.forEach((i) => { popular[i.item_name] = (popular[i.item_name] || 0) + Number(i.quantity); }); const list = el('popular-services');
-    if (list) { list.textContent = ''; Object.entries(popular).sort((a, b) => b[1] - a[1]).slice(0, 5).forEach(([name, qty]) => { const li = document.createElement('li'); li.textContent = `${name}: ${qty} items`; list.appendChild(li); }); }
+    renderCustomers(); renderOrders(); renderDashboard(); renderRecords(); renderSettings(); renderAdmins(); renderSecurity(); renderFaqs(); renderAudits(audits);
+    renderPopularServices();
   }
   function rowValues(row, values) { values.forEach((value) => { const cell = row.insertCell(); cell.textContent = String(value ?? ''); }); }
   function openDialog(id) { const dialog = el(id); if (dialog?.showModal) dialog.showModal(); }
@@ -88,10 +87,15 @@
       `${state.orders.filter((o) => Number(o.total || 0) > Number(o.amount_paid || 0)).length} order(s) with an outstanding balance`,
       `${state.messages.filter((m) => !m.is_replied).length} unread customer message(s)`
     ]; items.forEach((value) => { const li = document.createElement('li'); li.textContent = value; alerts.appendChild(li); }); }
-    ['received', 'washing', 'ironing', 'ready', 'collected'].forEach((status) => text(`pipeline-${status}`, state.orders.filter((order) => order.status === status).length));
+    ['received', 'washing', 'ironing', 'packaging', 'ready', 'collected'].forEach((status) => text(`pipeline-${status}`, state.orders.filter((order) => order.status === status).length));
     const chart = el('revenue-chart');
     if (chart) { chart.textContent = ''; const days = Array.from({ length: 7 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - (6 - index)); date.setHours(0, 0, 0, 0); return date; }); const values = days.map((date) => state.orders.filter((order) => { const created = new Date(order.created_at); return created >= date && created < new Date(date.getTime() + 86400000); }).reduce((sum, order) => sum + Number(order.amount_paid || 0), 0)); const highest = Math.max(...values, 1); values.forEach((value, index) => { const bar = document.createElement('div'); bar.innerHTML = `<span>${days[index].toLocaleDateString('en-NG', { weekday: 'short' })}</span><i style="height:${Math.max(8, Math.round((value / highest) * 100))}%"></i><b>${money(value)}</b>`; chart.appendChild(bar); }); }    const body = el('dashboard-orders-body'); if (!body) return; body.textContent = '';
     state.orders.slice(0, 5).forEach((o) => { const row = body.insertRow(); rowValues(row, [o.ticket_number, o.customers?.full_name || '', o.status, o.payment_status, money(o.total), new Date(o.created_at).toLocaleDateString()]); });
+  }
+  function renderRecords() {
+    text('record-customer-count', state.customers.length); text('record-order-count', state.orders.length); text('record-collected-count', state.orders.filter((order) => order.status === 'collected').length);
+    const body = el('records-orders-body'); if (!body) return; body.textContent = '';
+    state.orders.slice(0, 20).forEach((order) => { const row = body.insertRow(); rowValues(row, [order.ticket_number, order.customers?.full_name || '-', order.status, money(order.total), new Date(order.created_at).toLocaleDateString()]); const cell = row.insertCell(); const button = document.createElement('button'); button.type = 'button'; button.className = 'detail-link'; button.textContent = 'View'; button.onclick = () => showOrder(order); cell.appendChild(button); });
   }
   function renderSettings() {
     const fields = {
@@ -106,7 +110,7 @@
     const body = el('admin-table-body'); if (!body) return; body.textContent = '';
     state.admins.filter((admin) => admin.role === 'admin').forEach((admin) => { const row = body.insertRow(); rowValues(row, [admin.username || '-', admin.email, admin.role, admin.created_via || 'legacy', admin.created_at ? new Date(admin.created_at).toLocaleDateString() : '-']); });
   }
-  async function renderSecurity() { const current = await profile(); text('security-session-email', current.session?.user.email || 'No active session'); }
+  async function renderSecurity() { const { data, error } = await db.auth.getSession(); text('security-session-email', error ? 'Session unavailable' : data.session?.user.email || 'No active session'); }
   function renderFaqs() { const body = el('faq-table-body'); if (!body) return; body.textContent = ''; state.faqs.forEach((f) => { const row = body.insertRow(); rowValues(row, [f.question, f.answer, f.sort_order, f.is_active ? 'Active' : 'Hidden']); const cell = row.insertCell(); const button = document.createElement('button'); button.textContent = f.is_active ? 'Hide' : 'Show'; button.onclick = () => saveFaq(f, { is_active: !f.is_active }); cell.appendChild(button); }); }
   function renderAudits(rows) { const body = el('audit-table-body'); if (!body) return; body.textContent = ''; rows.forEach((a) => { const row = body.insertRow(); rowValues(row, [new Date(a.created_at).toLocaleString(), a.admin_email, a.action, a.entity_type, a.entity_id]); }); }
   function fillPriceSelect() { const select = el('order-price-select'); if (!select) return; select.textContent = ''; state.prices.forEach((p) => select.add(new Option(`${p.cloth_type} - ${money(p.washing_price)}`, p.id))); }
@@ -203,5 +207,5 @@
     document.querySelectorAll('[data-pipeline-status]').forEach((button) => button.addEventListener('click', () => { const filter = el('order-status-filter'); if (filter) filter.value = button.dataset.pipelineStatus; window.location.hash = 'orders'; renderOrders(); }));
     document.querySelectorAll('[data-dashboard-page]').forEach((link) => link.addEventListener('click', () => { window.location.hash = link.dataset.dashboardPage; }));    el('export-prices')?.addEventListener('click', () => exportCsv('prices.csv', state.prices)); el('export-orders')?.addEventListener('click', () => exportCsv('orders.csv', state.orders)); el('export-customers')?.addEventListener('click', () => exportCsv('customers.csv', state.customers)); el('export-revenue')?.addEventListener('click', () => exportCsv('revenue.csv', state.orders.map((order) => ({ ticket_number: order.ticket_number, date: order.created_at, total: order.total, amount_paid: order.amount_paid, outstanding: Math.max(0, Number(order.total) - Number(order.amount_paid)), status: order.status })))); el('export-messages')?.addEventListener('click', async () => { const { data } = await db.from('messages').select('*').order('id', { ascending: false }); exportCsv('messages.csv', data || []); });
   }
-  document.addEventListener('DOMContentLoaded', async () => { const { data } = await db.auth.getSession(); if (!data.session) return; bind(); try { await load(); } catch (error) { message(`Operations data could not load: ${error.message}`, true); } });
+  document.addEventListener('DOMContentLoaded', async () => { document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); }); const { data } = await db.auth.getSession(); if (!data.session) return; bind(); renderSecurity(); try { await load(); } catch (error) { message('Operations data could not load: ' + error.message, true); } });
 })();

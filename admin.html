@@ -186,10 +186,10 @@
                 <div><h2>Revenue overview</h2><div id="revenue-chart" class="revenue-chart" aria-label="Revenue for the last seven days"></div></div>
                 <div><h2>Needs attention</h2><ul id="dashboard-alerts" class="dashboard-alerts"></ul></div>
             </div>
-            <div class="pipeline"><h2>Order pipeline</h2><div class="pipeline-actions"><button type="button" data-pipeline-status="received">Received <span id="pipeline-received">0</span></button><button type="button" data-pipeline-status="washing">Washing <span id="pipeline-washing">0</span></button><button type="button" data-pipeline-status="ironing">Ironing <span id="pipeline-ironing">0</span></button><button type="button" data-pipeline-status="ready">Ready <span id="pipeline-ready">0</span></button><button type="button" data-pipeline-status="collected">Collected <span id="pipeline-collected">0</span></button></div></div>
+            <div class="pipeline"><div><h2>Order progress</h2><p>Click a stage to see those tickets.</p></div><div class="pipeline-actions"><button type="button" data-pipeline-status="received"><b>Received</b><small>At the counter</small><span id="pipeline-received">0</span></button><button type="button" data-pipeline-status="washing"><b>Washing</b><small>Being cleaned</small><span id="pipeline-washing">0</span></button><button type="button" data-pipeline-status="ironing"><b>Ironing</b><small>Being pressed</small><span id="pipeline-ironing">0</span></button><button type="button" data-pipeline-status="packaging"><b>Packaging</b><small>Final check</small><span id="pipeline-packaging">0</span></button><button type="button" data-pipeline-status="ready"><b>Ready</b><small>Awaiting collection</small><span id="pipeline-ready">0</span></button><button type="button" data-pipeline-status="collected"><b>Collected</b><small>Order closed</small><span id="pipeline-collected">0</span></button></div></div>
             <div class="dashboard-split"><div class="dashboard-recent"><h2>Recent orders</h2><table><thead><tr><th>Ticket</th><th>Customer</th><th>Status</th><th>Payment</th><th>Total</th><th>Created</th></tr></thead><tbody id="dashboard-orders-body"></tbody></table></div><div><h2>Popular services</h2><div id="popular-services" class="popular-services"></div></div></div>
             <div class="quick-actions"><a href="#orders" data-dashboard-page="orders">+ New Order</a><a href="#orders" data-dashboard-page="orders">View Orders</a><a href="#customers" data-dashboard-page="customers">View Customers</a><a href="#message" data-dashboard-page="message">View Messages</a><a href="#pricing" data-dashboard-page="pricing">Manage Prices</a></div>
-            <div class="export-actions"><button type="button" id="export-orders">Export Orders</button><button type="button" id="export-customers">Export Customers</button><button type="button" id="export-messages">Export Messages</button><button type="button" id="export-revenue">Export Revenue</button></div>
+            <details class="export-menu"><summary>Export data</summary><div><button type="button" id="export-orders">Orders</button><button type="button" id="export-customers">Customers</button><button type="button" id="export-messages">Messages</button><button type="button" id="export-revenue">Revenue</button></div></details>
         </section>
         <section class="sect ops-section admin-page" id="customers" data-admin-page="customers" data-aos="fade-up">
             <div class="firt"><h1>Customers</h1><button type="button" class="section-action but" id="open-customer-form">New Customer</button></div>
@@ -205,35 +205,28 @@
             <dialog class="workspace-dialog detail-dialog" id="record-dialog"><div id="record-dialog-content"></div></dialog>
         </section>
 
+        <section class="sect ops-section admin-page" id="records" data-admin-page="records" data-aos="fade-up">
+            <div class="firt"><h1>Business Records</h1></div>
+            <div class="record-summary"><div><span>Customers</span><strong id="record-customer-count">0</strong></div><div><span>Orders</span><strong id="record-order-count">0</strong></div><div><span>Collected</span><strong id="record-collected-count">0</strong></div></div>
+            <p class="workspace-intro">Search the Customer or Orders pages to make changes. This page is a quick, read-only history of the business.</p>
+            <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Status</th><th>Total</th><th>Created</th><th></th></tr></thead><tbody id="records-orders-body"></tbody></table></div>
+        </section>
+        <section class="sect ops-section admin-page" id="audit" data-admin-page="audit" data-aos="fade-up">
+            <div class="firt"><h1>Audit Log</h1><button type="button" class="section-action but" id="refresh-operations">Refresh</button></div>
+            <div class="security-overview"><div><span>Signed-in admin</span><strong id="security-session-email">Checking session...</strong></div><div><span>Access control</span><strong>Admin role and RLS enforced</strong></div><div><span>Activity history</span><strong>Important changes are recorded</strong></div></div>
+            <div class="table compact-table"><table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Record type</th><th>Record ID</th></tr></thead><tbody id="audit-table-body"></tbody></table></div>
+            <h2 class="subsection-title">Admin access</h2><div class="table compact-table"><table><thead><tr><th>Admin</th><th>Email</th><th>Role</th><th>Provisioned By</th><th>Created</th></tr></thead><tbody id="admin-table-body"></tbody></table></div>
+        </section>
         <section class="sect ops-section admin-page" id="settings" data-admin-page="settings" data-aos="fade-up">
-            <div class="firt"><h1>Settings, FAQ, and Audit</h1><button type="button" class="section-action but" id="refresh-operations">Refresh data</button></div>
+            <div class="firt"><h1>Business Settings and FAQ</h1></div>
             <div class="ops-grid">
                 <form id="settings-form" class="ops-card">
-                    <label for="setting-hours">Business Hours</label><input class="idk" id="setting-hours">
-                    <label for="setting-payment">Payment Instructions</label><textarea class="idk" id="setting-payment"></textarea>
-                    <label for="setting-whatsapp">WhatsApp Number</label><input class="idk" id="setting-whatsapp">
-                    <label for="setting-business-name">Business Name</label><input class="idk" id="setting-business-name">
-                    <label for="setting-address">Business Address</label><textarea class="idk" id="setting-address"></textarea>
-                    <label for="setting-email">Business Email</label><input class="idk" id="setting-email" type="email">
-                    <label for="setting-phone">Business Phone</label><input class="idk" id="setting-phone">
-                    <label for="setting-map-url">Google Maps Link</label><input class="idk" id="setting-map-url" type="url">
-                    <label for="setting-turnaround-hours">Default Turnaround Hours</label><input class="idk" id="setting-turnaround-hours" type="number" min="1">
-                    <label for="setting-ready-template">Ready Notification Template</label><textarea class="idk" id="setting-ready-template" placeholder="Use {{customer_name}}, {{ticket_number}}, {{outstanding_balance}}, {{business_hours}}"></textarea>
-                    <button class="but" type="submit">Save Settings</button>
+                    <label for="setting-hours">Business Hours</label><input class="idk" id="setting-hours"><label for="setting-payment">Payment Instructions</label><textarea class="idk" id="setting-payment"></textarea><label for="setting-whatsapp">WhatsApp Number</label><input class="idk" id="setting-whatsapp"><label for="setting-business-name">Business Name</label><input class="idk" id="setting-business-name"><label for="setting-address">Business Address</label><textarea class="idk" id="setting-address"></textarea><label for="setting-email">Business Email</label><input class="idk" id="setting-email" type="email"><label for="setting-phone">Business Phone</label><input class="idk" id="setting-phone"><label for="setting-map-url">Google Maps Link</label><input class="idk" id="setting-map-url" type="url"><label for="setting-turnaround-hours">Default Turnaround Hours</label><input class="idk" id="setting-turnaround-hours" type="number" min="1"><label for="setting-ready-template">Ready Notification Template</label><textarea class="idk" id="setting-ready-template" placeholder="Use {{customer_name}}, {{ticket_number}}, {{outstanding_balance}}, {{business_hours}}"></textarea><button class="but" type="submit">Save Settings</button>
                 </form>
-                <form id="faq-form" class="ops-card">
-                    <label for="faq-question">FAQ Question</label><input class="idk" id="faq-question">
-                    <label for="faq-answer">FAQ Answer</label><textarea class="idk" id="faq-answer"></textarea>
-                    <label for="faq-order">Sort Order</label><input class="idk" id="faq-order" type="number" value="0">
-                    <button class="but" type="submit">Add FAQ</button>
-                </form>
+                <form id="faq-form" class="ops-card"><label for="faq-question">FAQ Question</label><input class="idk" id="faq-question"><label for="faq-answer">FAQ Answer</label><textarea class="idk" id="faq-answer"></textarea><label for="faq-order">Sort Order</label><input class="idk" id="faq-order" type="number" value="0"><button class="but" type="submit">Add FAQ</button></form>
             </div>
             <div class="table compact-table"><table><thead><tr><th>Question</th><th>Answer</th><th>Order</th><th>Status</th><th>Action</th></tr></thead><tbody id="faq-table-body"></tbody></table></div>
-            <div class="table compact-table"><table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Type</th><th>ID</th></tr></thead><tbody id="audit-table-body"></tbody></table></div>
-            <div class="security-overview"><div><span>Signed-in admin</span><strong id="security-session-email">Loading...</strong></div><div><span>Access control</span><strong>Supabase admin role + RLS</strong></div><div><span>Security activity</span><strong>Recorded in audit log</strong></div></div>
-            <div class="table compact-table"><table><thead><tr><th>Admin</th><th>Email</th><th>Role</th><th>Provisioned By</th><th>Created</th></tr></thead><tbody id="admin-table-body"></tbody></table></div>
-        </section>
-        <section class="sect invite-admin admin-page" id="invite" data-admin-page="invite" data-aos="fade-up">
+        </section>        <section class="sect invite-admin admin-page" id="invite" data-admin-page="invite" data-aos="fade-up">
             <div class="firt">
                 <h1>Invite Admin</h1>
             </div>
@@ -253,7 +246,7 @@
             </div>
         </section>
         <div class="cp">
-            <p>&copy; 2024 <a href="#home">Idojuan Laundry and Dry Cleaning Services</a> all rights reserved</p>
+            <p>&copy; <span data-current-year></span> <a href="index.html">Idojuan Laundry and Dry Cleaning Services</a> all rights reserved</p>
             <button id="arrow">&uparrow;</button>
         </div>
 
