@@ -192,50 +192,17 @@
             <div class="export-actions"><button type="button" id="export-orders">Export Orders</button><button type="button" id="export-customers">Export Customers</button><button type="button" id="export-messages">Export Messages</button><button type="button" id="export-revenue">Export Revenue</button></div>
         </section>
         <section class="sect ops-section admin-page" id="customers" data-admin-page="customers" data-aos="fade-up">
-            <div class="firt"><h1>Customer Records</h1></div>
-            <div class="workspace-toolbar"><label><input id="customer-returning-only" type="checkbox"> Returning customers only</label></div>
-            <div class="ops-grid">
-                <form id="customer-form" class="ops-card">
-                    <label for="customer-name">Full Name</label><input class="idk" id="customer-name" required>
-                    <label for="customer-phone">Phone</label><input class="idk" id="customer-phone" required>
-                    <label for="customer-email">Email</label><input class="idk" id="customer-email" type="email">
-                    <label for="customer-address">Address optional</label><input class="idk" id="customer-address">
-                    <label for="customer-notes">Notes</label><textarea class="idk" id="customer-notes"></textarea>
-                    <button class="but" type="submit">Save Customer</button>
-                </form>
-                <div class="ops-card">
-                    <label for="customer-search">Search customer</label><input class="idk" id="customer-search" placeholder="Phone, name, email">
-                    <div class="table compact-table"><table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Total Orders</th><th>Notes</th></tr></thead><tbody id="customers-table-body"></tbody></table></div>
-                </div>
-            </div>
+            <div class="firt"><h1>Customers</h1><button type="button" class="section-action but" id="open-customer-form">New Customer</button></div>
+            <div class="workspace-toolbar"><label><input id="customer-returning-only" type="checkbox"> Returning customers only</label><label for="customer-search">Search customers<input class="idk" id="customer-search" placeholder="Phone, name, email"></label></div>
+            <div class="table compact-table"><table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Orders</th><th>Notes</th><th></th></tr></thead><tbody id="customers-table-body"></tbody></table></div>
+            <dialog class="workspace-dialog" id="customer-dialog"><form id="customer-form" method="dialog"><div class="dialog-heading"><div><p class="dialog-eyebrow">Customer record</p><h2>New customer</h2></div><button type="button" class="dialog-close" data-close-dialog="customer-dialog" aria-label="Close">Close</button></div><label for="customer-name">Full Name</label><input class="idk" id="customer-name" required><label for="customer-phone">Phone</label><input class="idk" id="customer-phone" required><label for="customer-email">Email</label><input class="idk" id="customer-email" type="email"><label for="customer-address">Address optional</label><input class="idk" id="customer-address"><label for="customer-notes">Notes</label><textarea class="idk" id="customer-notes"></textarea><button class="but" type="submit">Save Customer</button></form></dialog>
         </section>
-
         <section class="sect ops-section admin-page" id="orders" data-admin-page="orders" data-aos="fade-up">
-            <div class="firt"><h1>Orders and Tickets</h1></div>
-            <div class="workspace-toolbar"><label for="order-status-filter">Order status<select id="order-status-filter"><option value="">All statuses</option><option value="received">Received</option><option value="washing">Washing</option><option value="ironing">Ironing</option><option value="packaging">Packaging</option><option value="ready">Ready</option><option value="collected">Collected</option><option value="cancelled">Cancelled</option></select></label><label><input id="order-balance-only" type="checkbox"> Outstanding balance only</label></div>
-            <div class="ops-grid">
-                <form id="order-form" class="ops-card">
-                    <label for="order-customer-name">Customer Name</label><input class="idk" id="order-customer-name" required>
-                    <label for="order-customer-phone">Customer Phone</label><input class="idk" id="order-customer-phone" required>
-                    <label for="order-customer-email">Customer Email</label><input class="idk" id="order-customer-email" type="email">
-                    <label for="order-price-select">Item</label><select class="idk" id="order-price-select"></select>
-                    <label for="order-service-type">Service</label><select class="idk" id="order-service-type"><option value="washing">Washing</option><option value="ironing">Ironing</option></select>
-                    <label for="order-item-qty">Qty</label><input class="idk" id="order-item-qty" type="number" min="1" value="1">
-                    <button type="button" class="but" id="add-order-item">Add Item</button>
-                    <ul id="order-item-list" class="order-item-list"></ul>
-                    <label for="order-discount">Discount</label><input class="idk" id="order-discount" type="number" min="0" value="0">
-                    <label for="order-paid">Amount Paid</label><input class="idk" id="order-paid" type="number" min="0" value="0">
-                    <label for="order-collection-date">Expected Collection</label><input class="idk" id="order-collection-date" type="datetime-local">
-                    <label for="order-notes">Order Notes</label><textarea class="idk" id="order-notes"></textarea>
-                    <p class="order-total-line">Subtotal: <strong id="order-subtotal">NGN 0</strong></p>
-                    <p class="order-total-line">Total: <strong id="order-total">NGN 0</strong> | Payment: <strong id="order-payment-status">unpaid</strong></p>
-                    <button class="but" type="submit">Create Order</button>
-                </form>
-                <div class="ops-card">
-                    <label for="order-search">Search orders</label><input class="idk" id="order-search" placeholder="Ticket, phone, status">
-                    <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Phone</th><th>Status</th><th>Total</th><th>Balance</th><th>Payment</th><th>Collection</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="orders-table-body"></tbody></table></div>
-                </div>
-            </div>
+            <div class="firt"><h1>Orders and Tickets</h1><button type="button" class="section-action but" id="open-order-form">New Order</button></div>
+            <div class="workspace-toolbar"><label for="order-status-filter">Order status<select id="order-status-filter"><option value="">All statuses</option><option value="received">Received</option><option value="washing">Washing</option><option value="ironing">Ironing</option><option value="packaging">Packaging</option><option value="ready">Ready</option><option value="collected">Collected</option><option value="cancelled">Cancelled</option></select></label><label><input id="order-balance-only" type="checkbox"> Outstanding balance only</label><label for="order-search">Search orders<input class="idk" id="order-search" placeholder="Ticket, customer, phone"></label></div>
+            <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Phone</th><th>Status</th><th>Total</th><th>Balance</th><th>Payment</th><th>Collection</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="orders-table-body"></tbody></table></div>
+            <dialog class="workspace-dialog order-dialog" id="order-dialog"><form id="order-form" method="dialog"><div class="dialog-heading"><div><p class="dialog-eyebrow">Walk-in intake</p><h2>New order</h2></div><button type="button" class="dialog-close" data-close-dialog="order-dialog" aria-label="Close">Close</button></div><div class="dialog-grid"><div><label for="order-customer-name">Customer Name</label><input class="idk" id="order-customer-name" required><label for="order-customer-phone">Customer Phone</label><input class="idk" id="order-customer-phone" required><label for="order-customer-email">Customer Email</label><input class="idk" id="order-customer-email" type="email"></div><div><label for="order-price-select">Item</label><select class="idk" id="order-price-select"></select><label for="order-service-type">Service</label><select class="idk" id="order-service-type"><option value="washing">Washing</option><option value="ironing">Ironing</option></select><label for="order-item-qty">Qty</label><input class="idk" id="order-item-qty" type="number" min="1" value="1"><button type="button" class="but" id="add-order-item">Add Item</button></div></div><ul id="order-item-list" class="order-item-list"></ul><div class="dialog-grid"><div><label for="order-discount">Discount</label><input class="idk" id="order-discount" type="number" min="0" value="0"><label for="order-paid">Amount Paid</label><input class="idk" id="order-paid" type="number" min="0" value="0"></div><div><label for="order-collection-date">Expected Collection</label><input class="idk" id="order-collection-date" type="datetime-local"><label for="order-notes">Order Notes</label><textarea class="idk" id="order-notes"></textarea></div></div><div class="order-totals"><p>Subtotal <strong id="order-subtotal">NGN 0</strong></p><p>Total <strong id="order-total">NGN 0</strong></p><p>Payment <strong id="order-payment-status">unpaid</strong></p></div><button class="but" type="submit">Create Order</button></form></dialog>
+            <dialog class="workspace-dialog detail-dialog" id="record-dialog"><div id="record-dialog-content"></div></dialog>
         </section>
 
         <section class="sect ops-section admin-page" id="settings" data-admin-page="settings" data-aos="fade-up">

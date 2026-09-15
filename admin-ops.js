@@ -31,12 +31,31 @@
     if (list) { list.textContent = ''; Object.entries(popular).sort((a, b) => b[1] - a[1]).slice(0, 5).forEach(([name, qty]) => { const li = document.createElement('li'); li.textContent = `${name}: ${qty} items`; list.appendChild(li); }); }
   }
   function rowValues(row, values) { values.forEach((value) => { const cell = row.insertCell(); cell.textContent = String(value ?? ''); }); }
+  function openDialog(id) { const dialog = el(id); if (dialog?.showModal) dialog.showModal(); }
+  function closeDialog(id) { const dialog = el(id); if (dialog?.open) dialog.close(); }
+  function detailRow(container, label, value) { const row = document.createElement('p'); const strong = document.createElement('strong'); strong.textContent = `${label}: `; row.append(strong, document.createTextNode(value)); container.appendChild(row); }
+  function showCustomer(customer) {
+    const panel = el('record-dialog-content'); if (!panel) return; panel.textContent = '';
+    const heading = document.createElement('div'); heading.className = 'dialog-heading'; const title = document.createElement('h2'); title.textContent = customer.full_name; const close = document.createElement('button'); close.type = 'button'; close.className = 'dialog-close'; close.textContent = 'Close'; close.onclick = () => closeDialog('record-dialog'); heading.append(title, close); panel.appendChild(heading);
+    detailRow(panel, 'Phone', customer.phone); detailRow(panel, 'Email', customer.email || 'Not recorded'); detailRow(panel, 'Notes', customer.notes || 'None');
+    const history = state.orders.filter((order) => order.customer_id === customer.id); const subtitle = document.createElement('h3'); subtitle.textContent = `Order history (${history.length})`; panel.appendChild(subtitle);
+    if (!history.length) { const empty = document.createElement('p'); empty.textContent = 'No orders recorded for this customer yet.'; panel.appendChild(empty); }
+    history.slice(0, 10).forEach((order) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'detail-link'; button.textContent = `${order.ticket_number} - ${order.status} - ${money(order.total)}`; button.onclick = () => showOrder(order); panel.appendChild(button); }); openDialog('record-dialog');
+  }
+  function showOrder(order) {
+    const panel = el('record-dialog-content'); if (!panel) return; panel.textContent = '';
+    const heading = document.createElement('div'); heading.className = 'dialog-heading'; const title = document.createElement('h2'); title.textContent = order.ticket_number; const close = document.createElement('button'); close.type = 'button'; close.className = 'dialog-close'; close.textContent = 'Close'; close.onclick = () => closeDialog('record-dialog'); heading.append(title, close); panel.appendChild(heading);
+    detailRow(panel, 'Customer', order.customers?.full_name || 'Not recorded'); detailRow(panel, 'Status', order.status); detailRow(panel, 'Total', money(order.total)); detailRow(panel, 'Amount paid', money(order.amount_paid)); detailRow(panel, 'Balance', money(Math.max(0, Number(order.total) - Number(order.amount_paid)))); detailRow(panel, 'Expected collection', order.expected_collection_at ? new Date(order.expected_collection_at).toLocaleString() : 'Not set'); detailRow(panel, 'Notes', order.notes || 'None');
+    const subtitle = document.createElement('h3'); subtitle.textContent = 'Items'; panel.appendChild(subtitle); const items = state.items.filter((item) => item.order_id === order.id);
+    if (!items.length) { const empty = document.createElement('p'); empty.textContent = 'No item details recorded.'; panel.appendChild(empty); }
+    items.forEach((item) => detailRow(panel, item.item_name, `${item.quantity} x ${money(item.unit_price)} (${item.service_type})`)); openDialog('record-dialog');
+  }
   function renderCustomers() {
     const body = el('customers-table-body'); if (!body) return; body.textContent = '';
     const q = (el('customer-search')?.value || '').toLowerCase();
     const returningOnly = Boolean(el('customer-returning-only')?.checked);
     state.customers.filter((c) => `${c.full_name} ${c.phone} ${c.email}`.toLowerCase().includes(q) && (!returningOnly || Number(c.total_orders) > 1)).forEach((c) => {
-      const row = body.insertRow(); rowValues(row, [c.full_name, c.phone, c.email, c.total_orders, c.notes]);
+      const row = body.insertRow(); rowValues(row, [c.full_name, c.phone, c.email, c.total_orders, c.notes]); const action = row.insertCell(); const button = document.createElement('button'); button.type = 'button'; button.className = 'detail-link'; button.textContent = 'View'; button.onclick = () => showCustomer(c); action.appendChild(button);
     });
   }
   function renderOrders() {
@@ -49,7 +68,7 @@
       return `${o.ticket_number} ${o.customers?.full_name} ${o.customers?.phone} ${o.status}`.toLowerCase().includes(q) && (!statusFilter || o.status === statusFilter) && (!balanceOnly || balance > 0);
     }).forEach((o) => {
       const row = body.insertRow(); rowValues(row, [o.ticket_number, o.customers?.full_name, o.customers?.phone, o.status, money(o.total), money(Number(o.total) - Number(o.amount_paid)), o.payment_status, o.expected_collection_at ? new Date(o.expected_collection_at).toLocaleString() : '', o.notes || '-']);
-      const cell = row.insertCell(); const select = document.createElement('select'); ['received','washing','ironing','packaging','ready','collected','cancelled'].forEach((status) => select.add(new Option(status, status))); select.value = o.status;
+      const cell = row.insertCell(); const view = document.createElement('button'); view.type = 'button'; view.className = 'detail-link'; view.textContent = 'View'; view.onclick = () => showOrder(o); cell.appendChild(view); const select = document.createElement('select'); ['received','washing','ironing','packaging','ready','collected','cancelled'].forEach((status) => select.add(new Option(status, status))); select.value = o.status;
       select.onchange = () => updateOrder(o, { status: select.value, ready_at: select.value === 'ready' ? new Date().toISOString() : o.ready_at, collected_at: select.value === 'collected' ? new Date().toISOString() : o.collected_at, amount_paid: select.value === 'collected' ? o.total : o.amount_paid, payment_status: select.value === 'collected' ? 'paid' : o.payment_status }); cell.appendChild(select);
       const balance = Math.max(0, Number(o.total || 0) - Number(o.amount_paid || 0));
       if (balance > 0) {
@@ -136,10 +155,13 @@
     const csv = [keys.map(escapeCell).join(','), ...rows.map((row) => keys.map((key) => escapeCell(row[key])).join(','))].join(String.fromCharCode(10));
     const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = filename; link.click(); URL.revokeObjectURL(link.href);
   }  function bind() {
-    state.pending = [];
+    state.pending = [];    el('open-customer-form')?.addEventListener('click', () => openDialog('customer-dialog'));
+    el('open-order-form')?.addEventListener('click', () => openDialog('order-dialog'));
+    document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => closeDialog(button.dataset.closeDialog)));
+    document.querySelectorAll('.workspace-dialog').forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
     el('customer-search')?.addEventListener('input', renderCustomers); el('customer-returning-only')?.addEventListener('change', renderCustomers); el('order-search')?.addEventListener('input', renderOrders); el('order-status-filter')?.addEventListener('change', renderOrders); el('order-balance-only')?.addEventListener('change', renderOrders); el('price-search')?.addEventListener('input', filterPriceRows); el('refresh-operations')?.addEventListener('click', () => load().then(() => message('Data refreshed.')).catch((error) => message(error.message, true))); el('order-discount')?.addEventListener('input', totals); el('order-paid')?.addEventListener('input', totals);
     el('add-order-item')?.addEventListener('click', () => { const price = state.prices.find((p) => String(p.id) === el('order-price-select').value); if (!price) return; const quantity = Math.max(1, Number(el('order-item-qty').value || 1)), service = el('order-service-type').value, unit = Number(service === 'ironing' ? price.ironing_price : price.washing_price); state.pending.push({ price_id: price.id, item_name: price.cloth_type, service_type: service, quantity, unit_price: unit, line_total: unit * quantity }); renderPending(); totals(); });
-    el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const { error } = await db.from('customers').upsert(row, { onConflict: 'phone' }); if (error) return message(error.message, true); event.target.reset(); await load(); message('Customer saved.'); });
+    el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const { error } = await db.from('customers').upsert(row, { onConflict: 'phone' }); if (error) return message(error.message, true); event.target.reset(); closeDialog('customer-dialog'); await load(); message('Customer saved.'); });
     el('order-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (state.creatingOrder) return;
@@ -162,7 +184,7 @@
         const itemsWrite = await db.from('order_items').insert(state.pending.map((item) => ({ ...item, order_id: orderWrite.data.id })));
         if (itemsWrite.error) return message(itemsWrite.error.message, true);
         await audit('Created order', 'order', orderWrite.data.id, null, { ticket_number: ticket, total: t.total });
-        event.target.reset(); state.pending = []; renderPending(); await load(); message(`Order ${ticket} created.`);
+        event.target.reset(); state.pending = []; renderPending(); closeDialog('order-dialog'); await load(); message(`Order ${ticket} created.`);
       } finally { state.creatingOrder = false; if (submitButton) submitButton.disabled = false; }
     });    el('settings-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
