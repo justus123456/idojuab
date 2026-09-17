@@ -2,7 +2,7 @@
   'use strict';
   const db = window.supabaseClient;
   if (!db) return;
-  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [] };
+  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [], payments: [], staff: [] };
   const el = (id) => document.getElementById(id);
   const money = (n) => `NGN ${Number(n || 0).toLocaleString('en-NG')}`;
   const text = (id, value) => { if (el(id)) el(id).textContent = value; };
@@ -13,20 +13,25 @@
     const results = await Promise.all([
       db.from('prices').select('*').order('id'), db.from('customers').select('*').order('created_at', { ascending: false }),
       db.from('orders').select('*, customers(full_name, phone)').order('created_at', { ascending: false }), db.from('order_items').select('*').order('created_at'),
-      db.from('messages').select('*').order('id', { ascending: false }), db.from('users').select('id,username,email,role,created_via,created_at').order('created_at', { ascending: false }), db.from('business_settings').select('*'), db.from('faqs').select('*').order('sort_order'), db.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100)
+      db.from('messages').select('*').order('id', { ascending: false }), db.from('users').select('id,username,email,role,created_via,created_at').order('created_at', { ascending: false }), db.from('business_settings').select('*'), db.from('faqs').select('*').order('sort_order'), db.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100), db.from('payments').select('*, orders(ticket_number, customers(full_name))').order('created_at', { ascending: false }), db.from('staff_profiles').select('*')
     ]);
-    const bad = results.find((r) => r.error); if (bad) throw bad.error;
+    const required = results.slice(0, 9).find((result) => result.error);
+    if (required) throw required.error;
+    const unavailable = [];
+    if (results[9].error) unavailable.push('Payment Ledger');
+    if (results[10].error) unavailable.push('Staff Roles');
     state.prices = results[0].data || []; state.customers = results[1].data || []; state.orders = results[2].data || []; state.items = results[3].data || [];
     state.messages = results[4].data || []; state.admins = results[5].data || [];
-    state.settings = Object.fromEntries((results[6].data || []).map((r) => [r.key, r.value])); state.faqs = results[7].data || [];
+    state.settings = Object.fromEntries((results[6].data || []).map((r) => [r.key, r.value])); state.faqs = results[7].data || []; state.payments = results[9].data || []; state.staff = results[10].data || [];
     render(results[8].data || []); fillPriceSelect();
+    if (unavailable.length) message(unavailable.join(' and ') + ' need the latest Supabase SQL setup before they can load.', true);
   }
   function render(audits) {
     const now = new Date(), day = new Date(now.getFullYear(), now.getMonth(), now.getDate()), month = new Date(now.getFullYear(), now.getMonth(), 1);
     const today = state.orders.filter((o) => new Date(o.created_at) >= day), monthly = state.orders.filter((o) => new Date(o.created_at) >= month);
     const pending = state.orders.filter((o) => !['collected', 'cancelled'].includes(o.status)); const outstanding = state.orders.reduce((sum, o) => sum + Math.max(0, Number(o.total) - Number(o.amount_paid)), 0);
     text('metric-total-orders', state.orders.length); text('metric-pending-orders', pending.length); text('metric-ready-orders', state.orders.filter((o) => o.status === 'ready').length); text('metric-outstanding', money(outstanding)); text('metric-today-orders', today.length); text('metric-revenue-today', money(today.reduce((n, o) => n + Number(o.amount_paid), 0))); text('metric-revenue-month', money(monthly.reduce((n, o) => n + Number(o.amount_paid), 0))); text('metric-customers', state.customers.length);
-    renderCustomers(); renderOrders(); renderDashboard(); renderRecords(); renderSettings(); renderAdmins(); renderSecurity(); renderFaqs(); renderAudits(audits);
+    renderCustomers(); renderOrders(); renderDashboard(); renderRecords(); renderPayments(); renderReports(); renderSettings(); renderAdmins(); renderStaff(); renderSecurity(); renderFaqs(); renderAudits(audits);
     renderPopularServices();
   }
   function rowValues(row, values) { values.forEach((value) => { const cell = row.insertCell(); cell.textContent = String(value ?? ''); }); }
@@ -97,6 +102,21 @@
     const body = el('records-orders-body'); if (!body) return; body.textContent = '';
     state.orders.slice(0, 20).forEach((order) => { const row = body.insertRow(); rowValues(row, [order.ticket_number, order.customers?.full_name || '-', order.status, money(order.total), new Date(order.created_at).toLocaleDateString()]); const cell = row.insertCell(); const button = document.createElement('button'); button.type = 'button'; button.className = 'detail-link'; button.textContent = 'View'; button.onclick = () => showOrder(order); cell.appendChild(button); });
   }
+  function renderPayments() {
+    const select = el('payment-order-select'); if (select) { select.textContent = ''; state.orders.filter((order) => Number(order.total) > Number(order.amount_paid)).forEach((order) => select.add(new Option(`${order.ticket_number} - ${order.customers?.full_name || 'Customer'} (${money(Number(order.total) - Number(order.amount_paid))} due)`, order.id))); }
+    const body = el('payments-table-body'); if (!body) return; body.textContent = '';
+    state.payments.slice(0, 100).forEach((payment) => { const row = body.insertRow(); rowValues(row, [new Date(payment.created_at).toLocaleString(), payment.orders?.ticket_number || '-', payment.orders?.customers?.full_name || '-', money(payment.amount), payment.payment_method, payment.recorded_by || '-']); });
+  }
+  function renderReports() {
+    const paid = state.orders.reduce((sum, order) => sum + Number(order.amount_paid || 0), 0); const total = state.orders.reduce((sum, order) => sum + Number(order.total || 0), 0); const outstanding = Math.max(0, total - paid);
+    text('report-paid-revenue', money(paid)); text('report-outstanding', money(outstanding)); text('report-average-order', money(state.orders.length ? total / state.orders.length : 0)); text('report-returning-customers', state.customers.filter((customer) => Number(customer.total_orders) > 1).length);
+    const methodNode = el('report-payment-methods'); if (methodNode) { methodNode.textContent = ''; const methods = {}; state.payments.forEach((payment) => { methods[payment.payment_method] = (methods[payment.payment_method] || 0) + Number(payment.amount || 0); }); Object.entries(methods).forEach(([method, amount]) => { const row = document.createElement('p'); row.textContent = `${method}: ${money(amount)}`; methodNode.appendChild(row); }); if (!Object.keys(methods).length) methodNode.textContent = 'No ledger payments recorded yet.'; }
+    const serviceNode = el('report-services'); if (serviceNode) { serviceNode.textContent = ''; const items = {}; state.items.forEach((item) => { items[item.item_name] = (items[item.item_name] || 0) + Number(item.line_total || 0); }); Object.entries(items).sort((a, b) => b[1] - a[1]).slice(0, 5).forEach(([name, amount]) => { const row = document.createElement('p'); row.textContent = `${name}: ${money(amount)}`; serviceNode.appendChild(row); }); if (!Object.keys(items).length) serviceNode.textContent = 'No order items recorded yet.'; }
+  }
+  function renderStaff() {
+    const body = el('staff-table-body'); if (!body) return; body.textContent = ''; const profiles = new Map(state.staff.map((profile) => [String(profile.user_id), profile]));
+    state.admins.filter((admin) => admin.role === 'admin').forEach((admin) => { const profile = profiles.get(String(admin.id)); const row = body.insertRow(); rowValues(row, [admin.username || '-', admin.email, profile?.operational_role || 'manager']); const cell = row.insertCell(); const select = document.createElement('select'); ['owner', 'manager', 'secretary', 'laundry_staff'].forEach((role) => select.add(new Option(role.replaceAll('_', ' '), role))); select.value = profile?.operational_role || 'manager'; select.onchange = () => saveStaffRole(admin, select.value); cell.appendChild(select); });
+  }
   function renderSettings() {
     const fields = {
       'setting-hours': 'business_hours', 'setting-payment': 'payment_instructions', 'setting-whatsapp': 'whatsapp_number',
@@ -125,15 +145,15 @@
     await load(); message(`Order ${order.ticket_number} deleted.`);
   }  async function recordPayment(order, amount) {
     const outstanding = Math.max(0, Number(order.total || 0) - Number(order.amount_paid || 0));
-    if (!Number.isFinite(amount) || amount <= 0) return message('Enter a valid payment amount.', true);
-    if (amount > outstanding) return message(`Payment cannot exceed the outstanding balance of ${money(outstanding)}.`, true);
-    const amountPaid = Number(order.amount_paid || 0) + amount;
-    const changes = { amount_paid: amountPaid, payment_status: amountPaid >= Number(order.total || 0) ? 'paid' : 'partial' };
-    const { error } = await db.from('orders').update(changes).eq('id', order.id);
-    if (error) return message(error.message, true);
-    await audit('Recorded payment', 'order', order.id, { amount_paid: order.amount_paid, payment_status: order.payment_status }, changes);
-    await load(); message(`Payment of ${money(amount)} recorded.`);
-  }  async function notifyCustomer(order) {
+    if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding) return message(`Enter an amount up to ${money(outstanding)}.`, true);
+    const current = await profile(); const payment = await db.from('payments').insert({ order_id: order.id, amount, payment_method: 'cash', recorded_by: current.profile?.id || null });
+    if (payment.error) return message(payment.error.message, true);
+    const amountPaid = Number(order.amount_paid || 0) + amount; const changes = { amount_paid: amountPaid, payment_status: amountPaid >= Number(order.total || 0) ? 'paid' : 'partial' };
+    const { error } = await db.from('orders').update(changes).eq('id', order.id); if (error) return message(error.message, true);
+    await audit('Recorded payment', 'payment', order.id, null, { amount, payment_method: 'cash' }); await load(); message(`Payment of ${money(amount)} recorded.`);
+  }  async function saveStaffRole(admin, role) { const { error } = await db.from('staff_profiles').upsert({ user_id: admin.id, operational_role: role }); if (error) return message(error.message, true); await audit('Updated staff role', 'staff_profile', admin.id, null, { role }); await load(); message('Staff role updated.'); }
+  async function recordLedgerPayment() { const order = state.orders.find((entry) => entry.id === el('payment-order-select')?.value); const amount = Number(el('payment-amount')?.value || 0); const method = el('payment-method')?.value || 'cash'; if (!order) return message('Choose an order with an outstanding balance.', true); const outstanding = Math.max(0, Number(order.total) - Number(order.amount_paid)); if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding) return message(`Enter an amount up to ${money(outstanding)}.`, true); const current = await profile(); const payment = await db.from('payments').insert({ order_id: order.id, amount, payment_method: method, recorded_by: current.profile?.id || null }); if (payment.error) return message(payment.error.message, true); const amountPaid = Number(order.amount_paid) + amount; const update = await db.from('orders').update({ amount_paid: amountPaid, payment_status: amountPaid >= Number(order.total) ? 'paid' : 'partial' }).eq('id', order.id); if (update.error) return message(update.error.message, true); await audit('Recorded ledger payment', 'payment', order.id, null, { amount, method }); el('payment-amount').value = ''; await load(); message(`Payment of ${money(amount)} recorded.`); }
+  async function notifyCustomer(order) {
     const balance = Math.max(0, Number(order.total) - Number(order.amount_paid));
     const template = state.settings.ready_notification_template || 'Hello {{customer_name}}, your laundry order {{ticket_number}} is ready for collection. Your outstanding balance is {{outstanding_balance}}. You can collect during {{business_hours}}.';
     const note = template
@@ -185,6 +205,7 @@
         const submissionKey = crypto.randomUUID();
         const orderWrite = await db.from('orders').insert({ submission_key: submissionKey, ticket_number: ticket, customer_id: customerRead.data.id, subtotal: t.subtotal, discount: t.discount, total: t.total, amount_paid: t.paid, payment_status: t.paid >= t.total ? 'paid' : t.paid ? 'partial' : 'unpaid', created_by: current.profile?.id || null, expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), notes: el('order-notes').value.trim() }).select().maybeSingle();
         if (orderWrite.error || !orderWrite.data?.id) return message(orderWrite.error?.message || 'Order could not be created. Check the operations SQL and RLS policies are installed.', true);
+        if (t.paid > 0) { const initialPayment = await db.from('payments').insert({ order_id: orderWrite.data.id, amount: t.paid, payment_method: 'cash', recorded_by: current.profile?.id || null }); if (initialPayment.error) return message(initialPayment.error.message, true); }
         const itemsWrite = await db.from('order_items').insert(state.pending.map((item) => ({ ...item, order_id: orderWrite.data.id })));
         if (itemsWrite.error) return message(itemsWrite.error.message, true);
         await audit('Created order', 'order', orderWrite.data.id, null, { ticket_number: ticket, total: t.total });
@@ -203,9 +224,11 @@
     });
     el('faq-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const { error } = await db.from('faqs').insert({ question: el('faq-question').value.trim(), answer: el('faq-answer').value.trim(), sort_order: Number(el('faq-order').value || 0) }); if (error) return message(error.message, true); event.target.reset(); await load(); message('FAQ added.'); });
     if (el('onboarding-link')) el('onboarding-link').value = window.location.origin + '/admin-onboarding.html'; el('copy-onboarding-link')?.addEventListener('click', async () => { const link = el('onboarding-link')?.value; if (!link) return; try { await navigator.clipboard.writeText(link); message('Onboarding link copied.'); } catch { window.prompt('Copy onboarding link:', link); } });
+    el('record-ledger-payment')?.addEventListener('click', recordLedgerPayment);
+    el('export-orders-report')?.addEventListener('click', () => exportCsv('orders-report.csv', state.orders)); el('export-payments-report')?.addEventListener('click', () => exportCsv('payments-report.csv', state.payments)); el('export-customers-report')?.addEventListener('click', () => exportCsv('customers-report.csv', state.customers));
     el('refresh-dashboard')?.addEventListener('click', () => load().then(() => message('Dashboard refreshed.')).catch((error) => message(error.message, true)));
     document.querySelectorAll('[data-pipeline-status]').forEach((button) => button.addEventListener('click', () => { const filter = el('order-status-filter'); if (filter) filter.value = button.dataset.pipelineStatus; window.location.hash = 'orders'; renderOrders(); }));
     document.querySelectorAll('[data-dashboard-page]').forEach((link) => link.addEventListener('click', () => { window.location.hash = link.dataset.dashboardPage; }));    el('export-prices')?.addEventListener('click', () => exportCsv('prices.csv', state.prices)); el('export-orders')?.addEventListener('click', () => exportCsv('orders.csv', state.orders)); el('export-customers')?.addEventListener('click', () => exportCsv('customers.csv', state.customers)); el('export-revenue')?.addEventListener('click', () => exportCsv('revenue.csv', state.orders.map((order) => ({ ticket_number: order.ticket_number, date: order.created_at, total: order.total, amount_paid: order.amount_paid, outstanding: Math.max(0, Number(order.total) - Number(order.amount_paid)), status: order.status })))); el('export-messages')?.addEventListener('click', async () => { const { data } = await db.from('messages').select('*').order('id', { ascending: false }); exportCsv('messages.csv', data || []); });
   }
-  document.addEventListener('DOMContentLoaded', async () => { document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); }); const { data } = await db.auth.getSession(); if (!data.session) return; bind(); renderSecurity(); try { await load(); } catch (error) { message('Operations data could not load: ' + error.message, true); } });
+  document.addEventListener('DOMContentLoaded', async () => { document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); }); const { data } = await db.auth.getSession(); if (!data.session) return; bind(); renderSecurity(); try { await load(); } catch (error) { message('Admin data could not load. Run the latest Supabase SQL setup, then refresh. Details: ' + error.message, true); } });
 })();

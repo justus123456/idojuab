@@ -27,12 +27,16 @@
             <div class="sidebar-label">Workspace</div>
             <nav class="admin-nav" aria-label="Admin sections">
                 <a href="#dashboard" data-admin-page="dashboard"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
-                <a href="#pricing" data-admin-page="pricing"><i class="fas fa-tags"></i><span>Prices</span></a>
                 <a href="#orders" data-admin-page="orders"><i class="fas fa-receipt"></i><span>Orders</span></a>
+                <a href="#payments" data-admin-page="payments"><i class="fas fa-wallet"></i><span>Payments</span></a>
                 <a href="#customers" data-admin-page="customers"><i class="fas fa-users"></i><span>Customers</span></a>
+                <a href="#records" data-admin-page="records"><i class="fas fa-folder-open"></i><span>Records</span></a>
                 <a href="#message" data-admin-page="message"><i class="fas fa-envelope"></i><span>Messages</span></a>
+                <a href="#pricing" data-admin-page="pricing"><i class="fas fa-tags"></i><span>Prices</span></a>
+                <a href="#reports" data-admin-page="reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+                <a href="#audit" data-admin-page="audit"><i class="fas fa-clipboard-list"></i><span>Audit Log</span></a>
                 <a href="#settings" data-admin-page="settings"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
-                <a href="#invite" data-admin-page="invite"><i class="fas fa-user-plus"></i><span>Invite admin</span></a>
+                <a href="#invite" data-admin-page="invite"><i class="fas fa-user-plus"></i><span>Invite Admin</span></a>
             </nav>
             <div class="sidebar-bottom">
                 <a class="view-site" href="index.html"><i class="fas fa-external-link-alt"></i><span>View public site</span></a>
@@ -186,7 +190,7 @@
                 <div><h2>Revenue overview</h2><div id="revenue-chart" class="revenue-chart" aria-label="Revenue for the last seven days"></div></div>
                 <div><h2>Needs attention</h2><ul id="dashboard-alerts" class="dashboard-alerts"></ul></div>
             </div>
-            <div class="pipeline"><div><h2>Order progress</h2><p>Click a stage to see those tickets.</p></div><div class="pipeline-actions"><button type="button" data-pipeline-status="received"><b>Received</b><small>At the counter</small><span id="pipeline-received">0</span></button><button type="button" data-pipeline-status="washing"><b>Washing</b><small>Being cleaned</small><span id="pipeline-washing">0</span></button><button type="button" data-pipeline-status="ironing"><b>Ironing</b><small>Being pressed</small><span id="pipeline-ironing">0</span></button><button type="button" data-pipeline-status="packaging"><b>Packaging</b><small>Final check</small><span id="pipeline-packaging">0</span></button><button type="button" data-pipeline-status="ready"><b>Ready</b><small>Awaiting collection</small><span id="pipeline-ready">0</span></button><button type="button" data-pipeline-status="collected"><b>Collected</b><small>Order closed</small><span id="pipeline-collected">0</span></button></div></div>
+            <div class="pipeline"><h2>Orders by stage</h2><div class="pipeline-actions"><button type="button" data-pipeline-status="received">Received <span id="pipeline-received">0</span></button><button type="button" data-pipeline-status="washing">Washing <span id="pipeline-washing">0</span></button><button type="button" data-pipeline-status="ironing">Ironing <span id="pipeline-ironing">0</span></button><button type="button" data-pipeline-status="packaging">Packaging <span id="pipeline-packaging">0</span></button><button type="button" data-pipeline-status="ready">Ready <span id="pipeline-ready">0</span></button><button type="button" data-pipeline-status="collected">Collected <span id="pipeline-collected">0</span></button></div></div>
             <div class="dashboard-split"><div class="dashboard-recent"><h2>Recent orders</h2><table><thead><tr><th>Ticket</th><th>Customer</th><th>Status</th><th>Payment</th><th>Total</th><th>Created</th></tr></thead><tbody id="dashboard-orders-body"></tbody></table></div><div><h2>Popular services</h2><div id="popular-services" class="popular-services"></div></div></div>
             <div class="quick-actions"><a href="#orders" data-dashboard-page="orders">+ New Order</a><a href="#orders" data-dashboard-page="orders">View Orders</a><a href="#customers" data-dashboard-page="customers">View Customers</a><a href="#message" data-dashboard-page="message">View Messages</a><a href="#pricing" data-dashboard-page="pricing">Manage Prices</a></div>
             <details class="export-menu"><summary>Export data</summary><div><button type="button" id="export-orders">Orders</button><button type="button" id="export-customers">Customers</button><button type="button" id="export-messages">Messages</button><button type="button" id="export-revenue">Revenue</button></div></details>
@@ -205,19 +209,21 @@
             <dialog class="workspace-dialog detail-dialog" id="record-dialog"><div id="record-dialog-content"></div></dialog>
         </section>
 
+        <section class="sect ops-section admin-page" id="payments" data-admin-page="payments" data-aos="fade-up">
+            <div class="firt"><h1>Payment Ledger</h1></div>
+            <p class="workspace-intro">Every payment is recorded as a separate entry. The order balance updates automatically.</p>
+            <div class="workspace-toolbar"><label for="payment-order-select">Order<select id="payment-order-select"></select></label><label for="payment-amount">Amount<input id="payment-amount" type="number" min="1" step="0.01" placeholder="0"></label><label for="payment-method">Method<select id="payment-method"><option value="cash">Cash</option><option value="transfer">Bank transfer</option><option value="pos">POS</option></select></label><button type="button" class="but" id="record-ledger-payment">Record Payment</button></div>
+            <div class="table compact-table"><table><thead><tr><th>Date</th><th>Ticket</th><th>Customer</th><th>Amount</th><th>Method</th><th>Recorded by</th></tr></thead><tbody id="payments-table-body"></tbody></table></div>
+        </section>
         <section class="sect ops-section admin-page" id="records" data-admin-page="records" data-aos="fade-up">
-            <div class="firt"><h1>Business Records</h1></div>
-            <div class="record-summary"><div><span>Customers</span><strong id="record-customer-count">0</strong></div><div><span>Orders</span><strong id="record-order-count">0</strong></div><div><span>Collected</span><strong id="record-collected-count">0</strong></div></div>
-            <p class="workspace-intro">Search the Customer or Orders pages to make changes. This page is a quick, read-only history of the business.</p>
-            <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Status</th><th>Total</th><th>Created</th><th></th></tr></thead><tbody id="records-orders-body"></tbody></table></div>
+            <div class="firt"><h1>Business Records</h1></div><div class="record-summary"><div><span>Customers</span><strong id="record-customer-count">0</strong></div><div><span>Orders</span><strong id="record-order-count">0</strong></div><div><span>Collected</span><strong id="record-collected-count">0</strong></div></div><p class="workspace-intro">A read-only history of the business. Use Customers or Orders to open a record.</p><div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Status</th><th>Total</th><th>Created</th><th></th></tr></thead><tbody id="records-orders-body"></tbody></table></div>
+        </section>
+        <section class="sect ops-section admin-page" id="reports" data-admin-page="reports" data-aos="fade-up">
+            <div class="firt"><h1>Reports</h1></div><div class="report-grid"><div><span>Collected Revenue</span><strong id="report-paid-revenue">NGN 0</strong></div><div><span>Outstanding Balance</span><strong id="report-outstanding">NGN 0</strong></div><div><span>Average Order</span><strong id="report-average-order">NGN 0</strong></div><div><span>Returning Customers</span><strong id="report-returning-customers">0</strong></div></div><div class="dashboard-split"><div><h2>Payment methods</h2><div id="report-payment-methods" class="popular-services"></div></div><div><h2>Most requested items</h2><div id="report-services" class="popular-services"></div></div></div><details class="export-menu"><summary>Export report data</summary><div><button type="button" id="export-orders-report">Orders</button><button type="button" id="export-payments-report">Payments</button><button type="button" id="export-customers-report">Customers</button></div></details>
         </section>
         <section class="sect ops-section admin-page" id="audit" data-admin-page="audit" data-aos="fade-up">
-            <div class="firt"><h1>Audit Log</h1><button type="button" class="section-action but" id="refresh-operations">Refresh</button></div>
-            <div class="security-overview"><div><span>Signed-in admin</span><strong id="security-session-email">Checking session...</strong></div><div><span>Access control</span><strong>Admin role and RLS enforced</strong></div><div><span>Activity history</span><strong>Important changes are recorded</strong></div></div>
-            <div class="table compact-table"><table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Record type</th><th>Record ID</th></tr></thead><tbody id="audit-table-body"></tbody></table></div>
-            <h2 class="subsection-title">Admin access</h2><div class="table compact-table"><table><thead><tr><th>Admin</th><th>Email</th><th>Role</th><th>Provisioned By</th><th>Created</th></tr></thead><tbody id="admin-table-body"></tbody></table></div>
-        </section>
-        <section class="sect ops-section admin-page" id="settings" data-admin-page="settings" data-aos="fade-up">
+            <div class="firt"><h1>Audit Log</h1><button type="button" class="section-action but" id="refresh-operations">Refresh</button></div><div class="security-overview"><div><span>Signed-in admin</span><strong id="security-session-email">Checking session...</strong></div><div><span>Access control</span><strong>Admin role and RLS enforced</strong></div><div><span>Activity history</span><strong>Important changes are recorded</strong></div></div><div class="table compact-table"><table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Record type</th><th>Record ID</th></tr></thead><tbody id="audit-table-body"></tbody></table></div><h2 class="subsection-title">Staff roles</h2><p class="workspace-intro">Operational labels for approved admin accounts. They do not change login access or create new admin accounts.</p><div class="table compact-table"><table><thead><tr><th>Name</th><th>Email</th><th>Operational role</th><th></th></tr></thead><tbody id="staff-table-body"></tbody></table></div>
+        </section>        <section class="sect ops-section admin-page" id="settings" data-admin-page="settings" data-aos="fade-up">
             <div class="firt"><h1>Business Settings and FAQ</h1></div>
             <div class="ops-grid">
                 <form id="settings-form" class="ops-card">

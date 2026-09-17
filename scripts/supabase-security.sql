@@ -225,6 +225,25 @@ create table if not exists public.order_items (
   created_at timestamptz not null default now()
 );
 
+-- Financial history is append-only: correcting a payment should create a new audit event,
+-- not silently overwrite the original entry.
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete restrict,
+  amount numeric not null check (amount > 0),
+  payment_method text not null check (payment_method in ('cash', 'transfer', 'pos')),
+  recorded_by bigint references public.users(id),
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+-- Operational labels are separate from the admin authorization role.
+create table if not exists public.staff_profiles (
+  user_id bigint primary key references public.users(id) on delete cascade,
+  operational_role text not null default 'manager' check (operational_role in ('owner', 'manager', 'secretary', 'laundry_staff')),
+  is_active boolean not null default true,
+  updated_at timestamptz not null default now()
+);
 create table if not exists public.business_settings (
   key text primary key,
   value text not null,
@@ -259,6 +278,8 @@ create index if not exists orders_customer_created_idx on public.orders (custome
 create index if not exists orders_status_created_idx on public.orders (status, created_at desc);
 create index if not exists order_items_order_id_idx on public.order_items (order_id);
 create index if not exists audit_logs_created_idx on public.audit_logs (created_at desc);
+create index if not exists payments_order_created_idx on public.payments (order_id, created_at desc);
+create index if not exists payments_created_idx on public.payments (created_at desc);
 
 insert into public.business_settings (key, value)
 values
@@ -285,6 +306,8 @@ on conflict do nothing;
 alter table public.customers enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
+alter table public.payments enable row level security;
+alter table public.staff_profiles enable row level security;
 alter table public.business_settings enable row level security;
 alter table public.faqs enable row level security;
 alter table public.audit_logs enable row level security;
@@ -329,6 +352,14 @@ to authenticated
 using (public.is_admin())
 with check (public.is_admin());
 
+-- Payments remain immutable from the browser after recording.
+drop policy if exists "payments admin read" on public.payments;
+create policy "payments admin read" on public.payments for select to authenticated using (public.is_admin());
+drop policy if exists "payments admin insert" on public.payments;
+create policy "payments admin insert" on public.payments for insert to authenticated with check (public.is_admin());
+
+drop policy if exists "staff profiles admin all" on public.staff_profiles;
+create policy "staff profiles admin all" on public.staff_profiles for all to authenticated using (public.is_admin()) with check (public.is_admin());
 drop policy if exists "settings admin all" on public.business_settings;
 create policy "settings admin all"
 on public.business_settings
