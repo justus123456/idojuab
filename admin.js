@@ -131,11 +131,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       statusCell.appendChild(statusButton);
       row.appendChild(statusCell);
       const actionCell = document.createElement("td");
+      const replyButton = document.createElement("button");
+      replyButton.type = "button";
+      replyButton.className = "reply-message";
+      replyButton.dataset.id = String(msg.id);
+      replyButton.dataset.email = msg.email ?? "";
+      replyButton.dataset.name = msg.name ?? "Customer";
+      replyButton.textContent = "Reply";
       const button = document.createElement("button");
       button.className = "delete-message";
       button.dataset.id = String(msg.id);
       button.textContent = "Delete";
-      actionCell.appendChild(button);
+      actionCell.append(replyButton, button);
       row.appendChild(actionCell);
 
       tableBody.appendChild(row);
@@ -365,6 +372,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  async function sendMessageReply(messageId, email, reply) {
+    const { data } = await client.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Your session has ended. Please sign in again.");
+    const response = await fetch("/api/admin-message-reply", { method: "POST", headers: { "content-type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ messageId, email, reply }) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "The email could not be sent.");
+  }
+
   document.addEventListener("click", async (event) => {
     const editButton = event.target.closest(".edit-price");
     if (editButton) {
@@ -492,6 +508,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    const replyButton = event.target.closest(".reply-message");
+    if (replyButton) {
+      const dialog = document.getElementById("reply-dialog");
+      document.getElementById("reply-message-id").value = replyButton.dataset.id;
+      document.getElementById("reply-recipient").textContent = `To: ${replyButton.dataset.name} <${replyButton.dataset.email}>`;
+      document.getElementById("reply-body").value = `Hello ${replyButton.dataset.name},\n\n`;
+      if (dialog?.showModal) dialog.showModal();
+      return;
+    }
+
     const statusButton = event.target.closest(".toggle-message-status");
     if (statusButton) {
       const nextStatus = statusButton.dataset.replied !== "true";
@@ -519,6 +545,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   });
+
+  const replyForm = document.getElementById("reply-form");
+  if (replyForm) {
+    replyForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const messageId = Number(document.getElementById("reply-message-id").value);
+      const recipient = document.getElementById("reply-recipient").textContent.match(/<([^>]+)>/)?.[1] || "";
+      const body = document.getElementById("reply-body").value.trim();
+      if (!body) return;
+      const button = replyForm.querySelector("button[type=submit]");
+      button.disabled = true;
+      try {
+        await sendMessageReply(messageId, recipient, body);
+        document.getElementById("reply-dialog").close();
+        await fetchMessages();
+        window.alert("Email reply sent.");
+      } catch (error) {
+        window.alert(error.message || "The email could not be sent.");
+      } finally { button.disabled = false; }
+    });
+  }
 
   const clearMaleButton = document.getElementById("clear");
   if (clearMaleButton) {

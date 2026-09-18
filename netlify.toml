@@ -20,11 +20,17 @@
   path = "/api/order-status"
   function = "order-status"
 
+[[edge_functions]]
+  path = "/api/admin-message-reply"
+  function = "admin-message-reply"
+
+
 [[redirects]]
   from = "/signup"
   to = "/login.html"
   status = 302
   force = true
+
 
 [[redirects]]
   from = "/signup.html"

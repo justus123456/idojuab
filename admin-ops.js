@@ -133,7 +133,19 @@
   async function renderSecurity() { const { data, error } = await db.auth.getSession(); text('security-session-email', error ? 'Session unavailable' : data.session?.user.email || 'No active session'); }
   function renderFaqs() { const body = el('faq-table-body'); if (!body) return; body.textContent = ''; state.faqs.forEach((f) => { const row = body.insertRow(); rowValues(row, [f.question, f.answer, f.sort_order, f.is_active ? 'Active' : 'Hidden']); const cell = row.insertCell(); const button = document.createElement('button'); button.textContent = f.is_active ? 'Hide' : 'Show'; button.onclick = () => saveFaq(f, { is_active: !f.is_active }); cell.appendChild(button); }); }
   function renderAudits(rows) { const body = el('audit-table-body'); if (!body) return; body.textContent = ''; rows.forEach((a) => { const row = body.insertRow(); rowValues(row, [new Date(a.created_at).toLocaleString(), a.admin_email, a.action, a.entity_type, a.entity_id]); }); }
-  function fillPriceSelect() { const select = el('order-price-select'); if (!select) return; select.textContent = ''; state.prices.forEach((p) => select.add(new Option(`${p.cloth_type} - ${money(p.washing_price)}`, p.id))); }
+  function fillPriceSelect() {
+    const select = el('order-price-select');
+    const note = el('order-price-note');
+    if (!select) return;
+    const prices = state.prices
+      .filter((price) => price.id && String(price.cloth_type || '').trim() && Number.isFinite(Number(price.washing_price)) && Number.isFinite(Number(price.ironing_price)))
+      .sort((a, b) => String(a.cloth_type).localeCompare(String(b.cloth_type)));
+    select.textContent = '';
+    select.add(new Option(prices.length ? 'Select an item' : 'No price items available', ''));
+    prices.forEach((price) => select.add(new Option(`${price.cloth_type} - washing ${money(price.washing_price)}, ironing ${money(price.ironing_price)}`, price.id)));
+    select.disabled = prices.length === 0;
+    if (note) note.textContent = prices.length ? `${prices.length} saved price item${prices.length === 1 ? '' : 's'} available.` : 'Add a valid item under Prices before creating an order.';
+  }
   function totals() { const subtotal = (state.pending || []).reduce((n, i) => n + i.line_total, 0), discount = Number(el('order-discount')?.value || 0), total = Math.max(0, subtotal - discount), paid = Number(el('order-paid')?.value || 0); text('order-subtotal', money(subtotal)); text('order-total', money(total)); text('order-payment-status', paid >= total && total ? 'paid' : paid ? 'partial' : 'unpaid'); return { subtotal, discount, total, paid }; }
   function renderPending() { const list = el('order-item-list'); if (!list) return; list.textContent = ''; (state.pending || []).forEach((i, index) => { const li = document.createElement('li'); li.textContent = `${i.item_name} x ${i.quantity} = ${money(i.line_total)}`; const button = document.createElement('button'); button.textContent = 'Remove'; button.onclick = () => { state.pending.splice(index, 1); renderPending(); totals(); }; li.appendChild(button); list.appendChild(li); }); }  async function updateOrder(order, changes) { if (changes.status === 'collected') { const current = await profile(); changes.collected_by = current.profile?.id || null; } const { error } = await db.from('orders').update(changes).eq('id', order.id); if (error) return message(error.message, true); await audit('Updated order', 'order', order.id, order, changes); await load(); message('Order updated.'); }
   async function deleteOrder(order) {
@@ -180,12 +192,15 @@
     const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = filename; link.click(); URL.revokeObjectURL(link.href);
   }  function bind() {
     state.pending = [];    el('open-customer-form')?.addEventListener('click', () => openDialog('customer-dialog'));
-    el('open-order-form')?.addEventListener('click', () => openDialog('order-dialog'));
+    el('open-order-form')?.addEventListener('click', async () => {
+      try { await load(); } catch (error) { message(error.message || 'Could not refresh the price list.', true); }
+      openDialog('order-dialog');
+    });
     document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => closeDialog(button.dataset.closeDialog)));
     document.querySelectorAll('.workspace-dialog').forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
     el('customer-search')?.addEventListener('input', renderCustomers); el('customer-returning-only')?.addEventListener('change', renderCustomers); el('order-search')?.addEventListener('input', renderOrders); el('order-status-filter')?.addEventListener('change', renderOrders); el('order-balance-only')?.addEventListener('change', renderOrders); el('price-search')?.addEventListener('input', filterPriceRows); el('refresh-operations')?.addEventListener('click', () => load().then(() => message('Data refreshed.')).catch((error) => message(error.message, true))); el('order-discount')?.addEventListener('input', totals); el('order-paid')?.addEventListener('input', totals);
-    el('add-order-item')?.addEventListener('click', () => { const price = state.prices.find((p) => String(p.id) === el('order-price-select').value); if (!price) return; const quantity = Math.max(1, Number(el('order-item-qty').value || 1)), service = el('order-service-type').value, unit = Number(service === 'ironing' ? price.ironing_price : price.washing_price); state.pending.push({ price_id: price.id, item_name: price.cloth_type, service_type: service, quantity, unit_price: unit, line_total: unit * quantity }); renderPending(); totals(); });
-    el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const { error } = await db.from('customers').upsert(row, { onConflict: 'phone' }); if (error) return message(error.message, true); event.target.reset(); closeDialog('customer-dialog'); await load(); message('Customer saved.'); });
+    el('add-order-item')?.addEventListener('click', () => { const price = state.prices.find((p) => String(p.id) === el('order-price-select').value); if (!price) return message('Select an item from the saved price list first.', true); const quantity = Math.max(1, Number(el('order-item-qty').value || 1)), service = el('order-service-type').value, unit = Number(service === 'ironing' ? price.ironing_price : price.washing_price); state.pending.push({ price_id: price.id, item_name: price.cloth_type, service_type: service, quantity, unit_price: unit, line_total: unit * quantity }); renderPending(); totals(); });
+    el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const { error } = await db.from('customers').upsert(row, { onConflict: 'phone' }); if (error) { message('Could not save customer: ' + error.message, true); window.alert('Could not save customer: ' + error.message); return; } event.target.reset(); closeDialog('customer-dialog'); await load(); message('Customer saved.'); });
     el('order-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (state.creatingOrder) return;
@@ -230,5 +245,27 @@
     document.querySelectorAll('[data-pipeline-status]').forEach((button) => button.addEventListener('click', () => { const filter = el('order-status-filter'); if (filter) filter.value = button.dataset.pipelineStatus; window.location.hash = 'orders'; renderOrders(); }));
     document.querySelectorAll('[data-dashboard-page]').forEach((link) => link.addEventListener('click', () => { window.location.hash = link.dataset.dashboardPage; }));    el('export-prices')?.addEventListener('click', () => exportCsv('prices.csv', state.prices)); el('export-orders')?.addEventListener('click', () => exportCsv('orders.csv', state.orders)); el('export-customers')?.addEventListener('click', () => exportCsv('customers.csv', state.customers)); el('export-revenue')?.addEventListener('click', () => exportCsv('revenue.csv', state.orders.map((order) => ({ ticket_number: order.ticket_number, date: order.created_at, total: order.total, amount_paid: order.amount_paid, outstanding: Math.max(0, Number(order.total) - Number(order.amount_paid)), status: order.status })))); el('export-messages')?.addEventListener('click', async () => { const { data } = await db.from('messages').select('*').order('id', { ascending: false }); exportCsv('messages.csv', data || []); });
   }
-  document.addEventListener('DOMContentLoaded', async () => { document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); }); const { data } = await db.auth.getSession(); if (!data.session) return; bind(); renderSecurity(); try { await load(); } catch (error) { message('Admin data could not load. Run the latest Supabase SQL setup, then refresh. Details: ' + error.message, true); } });
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); });
+    text('security-session-email', 'Checking session...');
+    let sessionResult;
+    try {
+      sessionResult = await Promise.race([
+        db.auth.getSession(),
+        new Promise((_, reject) => window.setTimeout(() => reject(new Error('Session check timed out. Please refresh and sign in again.')), 8000))
+      ]);
+    } catch (error) {
+      text('security-session-email', 'Session unavailable');
+      message(error.message, true);
+      return;
+    }
+    if (!sessionResult.data?.session) {
+      text('security-session-email', 'No active session');
+      window.location.href = 'login.html';
+      return;
+    }
+    bind();
+    await renderSecurity();
+    try { await load(); } catch (error) { message('Admin data could not load. Run the latest Supabase SQL setup, then refresh. Details: ' + error.message, true); }
+  });
 })();
