@@ -56,6 +56,8 @@
     items.forEach((item) => detailRow(panel, item.item_name, `${item.quantity} x ${money(item.unit_price)} (${item.service_type})`)); openDialog('record-dialog');
   }
   async function saveCustomer(row) {
+    const result = await db.rpc('save_customer_record', { p_full_name: row.full_name, p_phone: row.phone, p_email: row.email, p_address: row.address, p_notes: row.notes });
+    if (!result.error || result.error.code !== 'PGRST202') return result;
     const existing = await db.from('customers').select('id').eq('phone', row.phone).order('created_at', { ascending: true }).limit(1);
     if (existing.error) return existing;
     const existingId = existing.data?.[0]?.id;
@@ -267,17 +269,13 @@
         if (!customerPayload.full_name || !customerPayload.phone) return fail('Customer name and phone are required.');
         const customerWrite = await saveCustomer(customerPayload);
         if (customerWrite.error) return fail('Could not save the customer: ' + customerWrite.error.message);
-        const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).order('created_at', { ascending: true }).limit(1);
-        if (customerRead.error || !customerRead.data?.[0]?.id) return fail('Customer could not be loaded: ' + (customerRead.error?.message || 'no customer ID returned'));
+        let customerId = customerWrite.data;
+        if (!customerId) { const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).order('created_at', { ascending: true }).limit(1); if (customerRead.error || !customerRead.data?.[0]?.id) return fail('Customer could not be loaded: ' + (customerRead.error?.message || 'no customer ID returned')); customerId = customerRead.data[0].id; }
         const ticket = `LD-${makeUuid().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
-        const current = await profile();
         const submissionKey = makeUuid();
-        const orderWrite = await db.from('orders').insert({ submission_key: submissionKey, ticket_number: ticket, customer_id: customerRead.data[0].id, subtotal: t.subtotal, discount: t.discount, total: t.total, amount_paid: t.paid, payment_status: t.paid >= t.total ? 'paid' : t.paid ? 'partial' : 'unpaid', created_by: current.profile?.id || null, expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), notes: el('order-notes').value.trim() }).select().maybeSingle();
-        if (orderWrite.error || !orderWrite.data?.id) return fail(orderWrite.error?.message || 'Order could not be created. Run the operations SQL and check admin RLS.');
-        if (t.paid > 0) { const initialPayment = await db.from('payments').insert({ order_id: orderWrite.data.id, amount: t.paid, payment_method: 'cash', recorded_by: current.profile?.id || null }); if (initialPayment.error) return fail('Order created, but payment could not be recorded: ' + initialPayment.error.message); }
-        const itemsWrite = await db.from('order_items').insert(state.pending.map((item) => ({ ...item, order_id: orderWrite.data.id })));
-        if (itemsWrite.error) return fail('Order created, but items could not be saved: ' + itemsWrite.error.message);
-        await audit('Created order', 'order', orderWrite.data.id, null, { ticket_number: ticket, total: t.total });
+        const orderWrite = await db.rpc('create_walk_in_order', { p_customer_id: customerId, p_ticket_number: ticket, p_submission_key: submissionKey, p_subtotal: t.subtotal, p_discount: t.discount, p_total: t.total, p_amount_paid: t.paid, p_expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), p_notes: el('order-notes').value.trim(), p_items: state.pending });
+        if (orderWrite.error || !orderWrite.data) return fail(orderWrite.error?.message || 'Order could not be created. Run the latest operations SQL in Supabase.');
+        const orderId = orderWrite.data;
         event.target.reset(); state.pending = []; renderPending(); closeDialog('order-dialog');
         try { await load(); } catch (refreshError) { message('Order created, but the list could not refresh: ' + refreshError.message, true); }
         message(`Order ${ticket} created.`);

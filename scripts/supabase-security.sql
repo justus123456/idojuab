@@ -394,6 +394,96 @@ for insert
 to authenticated
 with check (public.is_admin());
 
+create or replace function public.save_customer_record(
+  p_full_name text,
+  p_phone text,
+  p_email text default null,
+  p_address text default null,
+  p_notes text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_customer_id uuid;
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+  if nullif(trim(p_full_name), '') is null or nullif(trim(p_phone), '') is null then
+    raise exception 'Customer name and phone are required';
+  end if;
+  insert into public.customers (full_name, phone, email, address, notes)
+  values (trim(p_full_name), trim(p_phone), nullif(trim(p_email), ''), nullif(trim(p_address), ''), nullif(trim(p_notes), ''))
+  on conflict (phone) do update set
+    full_name = excluded.full_name,
+    email = excluded.email,
+    address = excluded.address,
+    notes = excluded.notes,
+    updated_at = now()
+  returning id into v_customer_id;
+  return v_customer_id;
+end;
+$$;
+
+create or replace function public.create_walk_in_order(
+  p_customer_id uuid,
+  p_ticket_number text,
+  p_submission_key uuid,
+  p_subtotal numeric,
+  p_discount numeric,
+  p_total numeric,
+  p_amount_paid numeric,
+  p_expected_collection_at timestamptz,
+  p_notes text,
+  p_items jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_order_id uuid;
+  v_admin_id bigint;
+  v_item jsonb;
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+  if p_customer_id is null or not exists (select 1 from public.customers where id = p_customer_id) then
+    raise exception 'Customer record was not found';
+  end if;
+  if p_items is null or jsonb_array_length(p_items) = 0 then
+    raise exception 'At least one order item is required';
+  end if;
+  if p_subtotal < 0 or p_discount < 0 or p_total < 0 or p_amount_paid < 0 then
+    raise exception 'Order amounts cannot be negative';
+  end if;
+  select id into v_admin_id from public.users where lower(email) = lower(auth.email()) and role = 'admin' limit 1;
+  insert into public.orders (ticket_number, customer_id, submission_key, subtotal, discount, total, amount_paid, payment_status, expected_collection_at, notes, created_by)
+  values (p_ticket_number, p_customer_id, p_submission_key, p_subtotal, p_discount, p_total, p_amount_paid, case when p_amount_paid >= p_total and p_total > 0 then 'paid' when p_amount_paid > 0 then 'partial' else 'unpaid' end, p_expected_collection_at, p_notes, v_admin_id)
+  returning id into v_order_id;
+  for v_item in select * from jsonb_array_elements(p_items) loop
+    insert into public.order_items (order_id, price_id, item_name, service_type, quantity, unit_price, line_total)
+    values (v_order_id, nullif(v_item->>'price_id', '')::bigint, v_item->>'item_name', v_item->>'service_type', (v_item->>'quantity')::integer, (v_item->>'unit_price')::numeric, (v_item->>'line_total')::numeric);
+  end loop;
+  if p_amount_paid > 0 then
+    insert into public.payments (order_id, amount, payment_method, recorded_by)
+    values (v_order_id, p_amount_paid, 'cash', v_admin_id);
+  end if;
+  insert into public.audit_logs (admin_id, admin_email, action, entity_type, entity_id, new_value)
+  values (v_admin_id, auth.email(), 'Created order', 'order', v_order_id::text, jsonb_build_object('ticket_number', p_ticket_number, 'total', p_total));
+  return v_order_id;
+end;
+$$;
+
+revoke all on function public.save_customer_record(text, text, text, text, text) from public;
+grant execute on function public.save_customer_record(text, text, text, text, text) to authenticated;
+revoke all on function public.create_walk_in_order(uuid, text, uuid, numeric, numeric, numeric, numeric, timestamptz, text, jsonb) from public;
+grant execute on function public.create_walk_in_order(uuid, text, uuid, numeric, numeric, numeric, numeric, timestamptz, text, jsonb) to authenticated;
 create or replace function public.increment_customer_order_count()
 returns trigger
 language plpgsql
