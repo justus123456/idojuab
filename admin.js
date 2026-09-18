@@ -595,6 +595,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await sendMessageReply(messageId, recipient, body);
         document.getElementById("reply-dialog").close();
         await fetchMessages();
+        window.dispatchEvent(new CustomEvent("admin-data-refresh"));
         window.alert("Email reply sent.");
       } catch (error) {
         window.alert(error.message || "The email could not be sent.");

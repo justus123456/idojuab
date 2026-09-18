@@ -44,8 +44,24 @@ export default async (request) => {
   }
 
   const timestamp = new Date().toISOString();
-  await supabaseFetch(`/rest/v1/messages?id=eq.${messageId}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ is_replied: true }) });
-  await supabaseFetch("/rest/v1/message_replies", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ message_id: messageId, recipient_email: recipient, reply_body: reply, sent_by: admin.id, sent_at: timestamp }) });
-  await supabaseFetch("/rest/v1/audit_logs", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ admin_id: admin.id, admin_email: caller.email, action: "Sent customer email reply", entity_type: "message", entity_id: String(messageId), new_value: { recipient } }) });
+  const messageUpdate = await supabaseFetch(`/rest/v1/messages?id=eq.${messageId}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ is_replied: true }) });
+  if (!messageUpdate.ok) {
+    console.error("Customer message status update failed:", messageUpdate.status, await messageUpdate.text().catch(() => ""));
+    return jsonResponse(500, { error: "The email was sent, but the message history could not be updated." });
+  }
+
+  const replyResponse = await supabaseFetch("/rest/v1/message_replies", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ message_id: messageId, recipient_email: recipient, reply_body: reply, sent_by: admin.id, sent_at: timestamp }) });
+  if (!replyResponse.ok) {
+    console.error("Customer reply history insert failed:", replyResponse.status, await replyResponse.text().catch(() => ""));
+    return jsonResponse(500, { error: "The email was sent, but the reply could not be saved to the conversation." });
+  }
+  const replyRows = await replyResponse.json().catch(() => []);
+  const replyRecord = Array.isArray(replyRows) ? replyRows[0] : null;
+
+  const auditResponse = await supabaseFetch("/rest/v1/audit_logs", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ admin_id: admin.id, admin_email: caller.email, action: "Sent customer email reply", entity_type: "message", entity_id: String(messageId), new_value: { reply_id: replyRecord?.id || null, recipient, reply_length: reply.length, sent_at: timestamp } }) });
+  if (!auditResponse.ok) {
+    console.error("Customer reply audit insert failed:", auditResponse.status, await auditResponse.text().catch(() => ""));
+    return jsonResponse(500, { error: "The email was sent and saved, but the audit record could not be written." });
+  }
   return jsonResponse(200, { success: true });
 };
