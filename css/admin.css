@@ -1239,7 +1239,7 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .message-bubble-admin { margin-left: 10%; background: #eef6f2; }
 .message-bubble strong { display: block; margin-bottom: 6px; color: #52606b; font-size: 12px; }
 .message-bubble p { margin: 0; white-space: pre-wrap; line-height: 1.55; }
-.reply-composer { min-height: 180px; resize: vertical; line-height: 1.5; }
+.reply-composer { min-height: 300px; height: min(42vh, 420px); resize: vertical; line-height: 1.55; }
 
 .message-inbox { padding: clamp(28px, 5vw, 64px) clamp(18px, 4vw, 56px); }
 .message-inbox-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; max-width: 1180px; margin: 0 auto 22px; }
@@ -1257,3 +1257,4 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .message-table .toggle-message-status { border: 1px solid #d8e5df; border-radius: 999px; padding: 6px 10px; color: #36725b; background: #f3faf6; cursor: pointer; font-size: 12px; }
 .message-table .delete-message { margin-left: 7px; border: 0; color: #9b2c2c; background: transparent; cursor: pointer; }
 @media (max-width: 640px) { .message-inbox-head { align-items: flex-start; flex-direction: column; } .message-inbox-panel { border-radius: 6px; } }
+@media (max-width: 640px) { .reply-composer { min-height: 240px; height: 34vh; } }

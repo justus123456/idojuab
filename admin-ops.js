@@ -7,7 +7,8 @@
   const money = (n) => `NGN ${Number(n || 0).toLocaleString('en-NG')}`;
   const text = (id, value) => { if (el(id)) el(id).textContent = value; };
   const message = (value, error) => { let node = el('ops-feedback'); if (!node) { node = document.createElement('p'); node.id = 'ops-feedback'; node.className = 'admin-feedback'; el('dashboard')?.prepend(node); } node.textContent = value; node.dataset.error = error ? 'true' : 'false'; };
-  async function profile() { const { data } = await db.auth.getSession(); const email = data.session?.user.email; if (!email) return { session: null, profile: null }; const result = await db.from('users').select('id,email').eq('email', email).maybeSingle(); return { session: data.session, profile: result.data }; }
+  const makeUuid = () => globalThis.crypto?.randomUUID?.() || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, (c) => (c ^ globalThis.crypto?.getRandomValues?.(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+  async function profile() { const { data } = await db.auth.getSession(); const email = data.session?.user.email; if (!email) return { session: null, profile: null }; const result = await db.from('users').select('id,email').ilike('email', email).maybeSingle(); return { session: data.session, profile: result.data }; }
   async function audit(action, type, id, oldValue, newValue) { const current = await profile(); await db.from('audit_logs').insert({ admin_id: current.profile?.id || null, admin_email: current.session?.user.email, action, entity_type: type, entity_id: String(id || ''), old_value: oldValue || null, new_value: newValue || null }); }
   async function load() {
     const results = await Promise.all([
@@ -268,9 +269,9 @@
         if (customerWrite.error) return fail('Could not save the customer: ' + customerWrite.error.message);
         const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).order('created_at', { ascending: true }).limit(1);
         if (customerRead.error || !customerRead.data?.[0]?.id) return fail('Customer could not be loaded: ' + (customerRead.error?.message || 'no customer ID returned'));
-        const ticket = `LD-${crypto.randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
+        const ticket = `LD-${makeUuid().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
         const current = await profile();
-        const submissionKey = crypto.randomUUID();
+        const submissionKey = makeUuid();
         const orderWrite = await db.from('orders').insert({ submission_key: submissionKey, ticket_number: ticket, customer_id: customerRead.data[0].id, subtotal: t.subtotal, discount: t.discount, total: t.total, amount_paid: t.paid, payment_status: t.paid >= t.total ? 'paid' : t.paid ? 'partial' : 'unpaid', created_by: current.profile?.id || null, expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), notes: el('order-notes').value.trim() }).select().maybeSingle();
         if (orderWrite.error || !orderWrite.data?.id) return fail(orderWrite.error?.message || 'Order could not be created. Run the operations SQL and check admin RLS.');
         if (t.paid > 0) { const initialPayment = await db.from('payments').insert({ order_id: orderWrite.data.id, amount: t.paid, payment_method: 'cash', recorded_by: current.profile?.id || null }); if (initialPayment.error) return fail('Order created, but payment could not be recorded: ' + initialPayment.error.message); }
