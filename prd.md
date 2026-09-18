@@ -1,8 +1,8 @@
-﻿# Product Requirements Document
+# Product Requirements Document
 
 ## Purpose
 
-The site helps customers understand Idojuan Laundry services, estimate costs before visiting, get directions, and contact the business. It helps admins manage prices/messages and invite new admins securely.
+The site helps customers understand Ido-Juan Laundry services, estimate costs before visiting, get directions, and contact the business. It helps admins manage prices/messages and invite new admins securely.
 
 ## Operating Constraint
 

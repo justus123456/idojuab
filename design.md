@@ -1,8 +1,8 @@
-﻿# Design
+# Design
 
 ## Product Feel
 
-Idojuan Laundry should feel clean, practical, and local-service focused. The site is not a delivery app; it helps customers decide, estimate, locate the shop, and contact the business before an in-store visit.
+Ido-Juan Laundry should feel clean, practical, and local-service focused. The site is not a delivery app; it helps customers decide, estimate, locate the shop, and contact the business before an in-store visit.
 
 ## Visual System
 

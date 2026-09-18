@@ -1234,3 +1234,26 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .form-feedback { min-height: 1.3em; margin: 10px 0; color: #4d4d4d; }
 .form-feedback[data-error="true"] { color: #9b2c2c; }
 .field-help { min-height: 1.2em; margin: 6px 0 12px; color: #4d4d4d; font-size: 0.85rem; }
+.message-thread { display: grid; gap: 10px; max-height: 280px; overflow: auto; margin: 14px 0 18px; padding: 4px; }
+.message-bubble { border: 1px solid #d7dde2; border-radius: 8px; padding: 12px 14px; background: #fff; }
+.message-bubble-admin { margin-left: 10%; background: #eef6f2; }
+.message-bubble strong { display: block; margin-bottom: 6px; color: #52606b; font-size: 12px; }
+.message-bubble p { margin: 0; white-space: pre-wrap; line-height: 1.55; }
+.reply-composer { min-height: 180px; resize: vertical; line-height: 1.5; }
+
+.message-inbox { padding: clamp(28px, 5vw, 64px) clamp(18px, 4vw, 56px); }
+.message-inbox-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; max-width: 1180px; margin: 0 auto 22px; }
+.message-inbox-head h1 { margin: 4px 0 8px; color: #24313a; font-size: clamp(28px, 4vw, 42px); }
+.section-kicker { margin: 0; color: #a5623e; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.section-lede { max-width: 520px; margin: 0; color: #68717c; line-height: 1.6; }
+.inbox-mark { border: 1px solid #d8c2b6; border-radius: 999px; padding: 8px 13px; color: #8b5138; background: #fffaf7; font-size: 12px; font-weight: 700; }
+.message-inbox-panel { max-width: 1180px; margin: 0 auto; border: 1px solid #e1e5e8; border-radius: 8px; background: #fff; box-shadow: 0 12px 32px rgba(32, 43, 50, .06); overflow: hidden; }
+.message-inbox-toolbar { display: flex; justify-content: space-between; gap: 16px; padding: 17px 20px; border-bottom: 1px solid #e6e9eb; color: #52606b; }
+.message-inbox-toolbar span { color: #8b969e; font-size: 12px; }
+.message-table { overflow-x: auto; }
+.message-table table { min-width: 680px; }
+.message-table td:nth-child(2) { max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.message-table .reply-message { border: 0; border-radius: 5px; padding: 8px 11px; color: #fff; background: #a5623e; cursor: pointer; font-weight: 600; }
+.message-table .toggle-message-status { border: 1px solid #d8e5df; border-radius: 999px; padding: 6px 10px; color: #36725b; background: #f3faf6; cursor: pointer; font-size: 12px; }
+.message-table .delete-message { margin-left: 7px; border: 0; color: #9b2c2c; background: transparent; cursor: pointer; }
+@media (max-width: 640px) { .message-inbox-head { align-items: flex-start; flex-direction: column; } .message-inbox-panel { border-radius: 6px; } }

@@ -137,12 +137,12 @@ function updateEstimatorOptions() {
 
 function buildEstimateMessage() {
     if (estimateItems.length === 0) {
-        return "Hello Idojuan Laundry, I would like to ask about your laundry services.";
+        return "Hello Ido-Juan Laundry, I would like to ask about your laundry services.";
     }
 
     const lines = estimateItems.map((item, index) => `${index + 1}. ${item.clothType} (${item.gender}) - ${item.service}: ${formatPrice(item.price)}`);
     const total = estimateItems.reduce((sum, item) => sum + item.price, 0);
-    return `Hello Idojuan Laundry, I plan to bring these items:\n${lines.join("\n")}\nEstimated total: ${formatPrice(total)}\nPlease confirm final pricing in-store.`;
+    return `Hello Ido-Juan Laundry, I plan to bring these items:\n${lines.join("\n")}\nEstimated total: ${formatPrice(total)}\nPlease confirm final pricing in-store.`;
 }
 
 function renderEstimate() {

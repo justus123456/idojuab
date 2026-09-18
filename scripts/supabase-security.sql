@@ -286,14 +286,18 @@ values
   ('business_hours', 'Mon-Sat: 8:00 AM - 6:00 PM'),
   ('payment_instructions', 'Payment is accepted in-store. Please confirm cash, POS, or transfer details with staff before collection.'),
   ('whatsapp_number', '2348063894359'),
-  ('business_name', 'Idojuan Laundry and Dry Cleaning Services'),
+  ('business_name', 'Ido-Juan Laundry and Dry Cleaning Services'),
   ('business_address', 'Mosque shop 7 beside Ogab Services, Gado Nasko road 2/1, Kubwa, Abuja'),
   ('business_email', 'Idoresltd@yahoo.com'),
   ('business_phone', '08063894359'),
-  ('business_map_url', 'https://www.google.com/maps/search/?api=1&query=Idojuan%20Laundry%20Kubwa%20Abuja'),
+  ('business_map_url', 'https://www.google.com/maps/search/?api=1&query=Ido-Juan%20Laundry%20Kubwa%20Abuja'),
   ('default_turnaround_hours', '48'),
   ('ready_notification_template', 'Hello {{customer_name}}, your laundry order {{ticket_number}} is ready for collection. Your outstanding balance is {{outstanding_balance}}. You can collect during {{business_hours}}.')
 on conflict (key) do nothing;
+
+update public.business_settings
+set value = replace(value, 'Idojuan', 'Ido-Juan')
+where value like '%Idojuan%';
 
 insert into public.faqs (question, answer, sort_order)
 values

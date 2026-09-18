@@ -25,7 +25,7 @@ export default async (request) => {
   try { body = await request.json(); } catch { return jsonResponse(400, { error: "Invalid reply data." }); }
   const messageId = Number(body?.messageId);
   const recipient = normalizeEmail(body?.email);
-  const reply = String(body?.reply || "").trim().replace(/\s+/g, " ");
+  const reply = String(body?.reply || "").trim().replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n");
   if (!Number.isInteger(messageId) || messageId < 1 || !isValidEmail(recipient) || !reply || reply.length > 2000) return jsonResponse(400, { error: "Enter a valid email and a reply of up to 2,000 characters." });
 
   const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -34,7 +34,7 @@ export default async (request) => {
     body: JSON.stringify({
       from: REPLY_EMAIL_FROM,
       to: recipient,
-      subject: "Reply from Idojuan Laundry",
+      subject: "Reply from Ido-Juan Laundry",
       text: reply,
     }),
   });

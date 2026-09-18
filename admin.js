@@ -118,8 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     messages.forEach((msg) => {
       const row = document.createElement("tr");
-      appendCell(row, msg.name ?? "");
-      appendCell(row, msg.email ?? "");
+      appendCell(row, `${msg.name ?? ""} <${msg.email ?? ""}>`);
       appendCell(row, msg.message ?? "");
       appendCell(row, msg.created_at ? new Date(msg.created_at).toLocaleString() : "-");
       const statusCell = document.createElement("td");
@@ -136,8 +135,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       replyButton.className = "reply-message";
       replyButton.dataset.id = String(msg.id);
       replyButton.dataset.email = msg.email ?? "";
-      replyButton.dataset.name = msg.name ?? "Customer";
-      replyButton.textContent = "Reply";
+      replyButton.dataset.name = msg.name ?? "Customer"; replyButton.dataset.message = msg.message ?? ""; replyButton.dataset.createdAt = msg.created_at ?? "";
+      replyButton.textContent = "Open conversation";
       const button = document.createElement("button");
       button.className = "delete-message";
       button.dataset.id = String(msg.id);
@@ -199,6 +198,45 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  async function openMessageConversation(message) {
+    const dialog = document.getElementById("reply-dialog");
+    const thread = document.getElementById("message-thread");
+    const recipient = document.getElementById("reply-recipient");
+    const body = document.getElementById("reply-body");
+    const id = document.getElementById("reply-message-id");
+    if (!dialog || !thread || !recipient || !body || !id) return;
+    id.value = String(message.id);
+    recipient.textContent = `To: ${message.name || "Customer"} <${message.email || ""}>`;
+    body.value = `Hello ${message.name || "Customer"},\n\n`;
+    thread.textContent = "Loading conversation...";
+    if (dialog.showModal) dialog.showModal();
+    const { data: replies, error } = await client.from("message_replies").select("reply_body,sent_at,recipient_email").eq("message_id", message.id).order("sent_at", { ascending: true });
+    thread.textContent = "";
+    const original = document.createElement("article");
+    original.className = "message-bubble message-bubble-customer";
+    const originalHeading = document.createElement("strong");
+    originalHeading.textContent = `${message.name || "Customer"} - ${message.created_at ? new Date(message.created_at).toLocaleString() : ""}`;
+    const originalText = document.createElement("p");
+    originalText.textContent = message.message || "";
+    original.append(originalHeading, originalText);
+    thread.appendChild(original);
+    if (error) {
+      const notice = document.createElement("p");
+      notice.textContent = "Previous replies could not be loaded. You can still send a new reply.";
+      thread.appendChild(notice);
+      return;
+    }
+    (replies || []).forEach((reply) => {
+      const bubble = document.createElement("article");
+      bubble.className = "message-bubble message-bubble-admin";
+      const heading = document.createElement("strong");
+      heading.textContent = `Ido-Juan - ${reply.sent_at ? new Date(reply.sent_at).toLocaleString() : ""}`;
+      const text = document.createElement("p");
+      text.textContent = reply.reply_body || "";
+      bubble.append(heading, text);
+      thread.appendChild(bubble);
+    });
+  }
   async function fetchMessages() {
     try {
       const { data, error } = await client
@@ -510,11 +548,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const replyButton = event.target.closest(".reply-message");
     if (replyButton) {
-      const dialog = document.getElementById("reply-dialog");
-      document.getElementById("reply-message-id").value = replyButton.dataset.id;
-      document.getElementById("reply-recipient").textContent = `To: ${replyButton.dataset.name} <${replyButton.dataset.email}>`;
-      document.getElementById("reply-body").value = `Hello ${replyButton.dataset.name},\n\n`;
-      if (dialog?.showModal) dialog.showModal();
+      const message = { id: Number(replyButton.dataset.id), name: replyButton.dataset.name, email: replyButton.dataset.email, message: replyButton.dataset.message, created_at: replyButton.dataset.createdAt };
+      await openMessageConversation(message);
       return;
     }
 

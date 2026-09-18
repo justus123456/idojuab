@@ -3,7 +3,7 @@ export const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 export const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 export const OTP_PEPPER = Deno.env.get("OTP_PEPPER") || "";
 export const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-export const OTP_EMAIL_FROM = Deno.env.get("OTP_EMAIL_FROM") || "Idojuan Laundry <onboarding@resend.dev>";
+export const OTP_EMAIL_FROM = Deno.env.get("OTP_EMAIL_FROM") || "Ido-Juan Laundry <onboarding@resend.dev>";
 export const SITE_URL = Deno.env.get("SITE_URL") || Deno.env.get("DEPLOY_PRIME_URL") || Deno.env.get("URL") || "";
 
 export function jsonResponse(status, body) {
@@ -137,8 +137,8 @@ export async function sendOtpEmail(candidateEmail, otp, requestOrigin = "") {
     body: JSON.stringify({
       from: OTP_EMAIL_FROM,
       to: candidateEmail,
-      subject: "Your Idojuan Laundry admin setup code",
-      text: `Your Idojuan Laundry admin setup code is ${otp}. It expires in 10 minutes. Open ${onboardingUrl} to finish setup.`,
+      subject: "Your Ido-Juan Laundry admin setup code",
+      text: `Your Ido-Juan Laundry admin setup code is ${otp}. It expires in 10 minutes. Open ${onboardingUrl} to finish setup.`,
     }),
   });
   if (!response.ok) console.error("Resend OTP delivery failed:", response.status, await response.text().catch(() => ""));

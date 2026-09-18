@@ -1,8 +1,8 @@
-﻿# Rules
+# Rules
 
 ## Business Rules
 
-- Idojuan Laundry does not offer pickup or delivery.
+- Ido-Juan Laundry does not offer pickup or delivery.
 - Customers drop off and collect items in-store.
 - Prices are split by Male and Female categories.
 - Prices are displayed in NGN.

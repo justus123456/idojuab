@@ -4,8 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="robots" content="noindex, nofollow">
-        <meta name="description" content="Private operations dashboard for Idojuan Laundry administrators.">
-        <title>Admin Dashboard | Idojuan Laundry</title>
+        <meta name="description" content="Private operations dashboard for Ido-Juan Laundry administrators.">
+        <title>Admin Dashboard | Ido-Juan Laundry</title>
         <link rel="stylesheet" href="fonts/css/all.css">
         <link rel="stylesheet" href="css/admin.css">
         <link rel="shortcut icon" href="images/Laundry Logo design template - Made with PosterMyWall.png" type="image/x-icon">
@@ -23,7 +23,7 @@
     </head>
     <body>
         <header class="admin-sidebar">
-            <div class="admin-brand"><span class="brand-mark">I</span><div><strong>Idojuan</strong><small>Admin workspace</small></div></div>
+            <div class="admin-brand"><span class="brand-mark">I</span><div><strong>Ido-Juan</strong><small>Admin workspace</small></div></div>
             <div class="sidebar-label">Workspace</div>
             <nav class="admin-nav" aria-label="Admin sections">
                 <a href="#dashboard" data-admin-page="dashboard"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
@@ -155,19 +155,24 @@
                 <button id="dear" class="clear">Clear</button>
             </div>
         </section>
-        <section class="message admin-page" id="message" data-admin-page="message" data-aos="fade-up">
-            <div class="container">
-                <div class="title">
-                    <h2 class="titleText"><span>m</span>essages</h2>
+        <section class="message admin-page message-inbox" id="message" data-admin-page="message" data-aos="fade-up">
+            <div class="message-inbox-head">
+                <div>
+                    <p class="section-kicker">Customer care</p>
+                    <h1>Messages</h1>
+                    <p class="section-lede">Read customer requests, open the full conversation, and reply by email from one place.</p>
                 </div>
-                <div class="table">
+                <span class="inbox-mark">Inbox</span>
+            </div>
+            <div class="message-inbox-panel">
+                <div class="message-inbox-toolbar"><strong>Customer requests</strong><span>Newest first</span></div>
+                <div class="table message-table">
                     <table>
                         <thead>
                             <tr>
-                                <th>name</th>
-                                <th>email</th>
-                                <th>message</th>
-                                <th>date</th>
+                                <th>Customer</th>
+                                <th>Message</th>
+                                <th>Received</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -180,7 +185,7 @@
                 </div>
             </div>
         </section>
-        <dialog class="workspace-dialog" id="reply-dialog"><form id="reply-form" method="dialog"><div class="dialog-heading"><div><p class="dialog-eyebrow">Customer message</p><h2>Reply by email</h2></div><button type="button" class="dialog-close" data-close-dialog="reply-dialog" aria-label="Close">Close</button></div><p id="reply-recipient"></p><input id="reply-message-id" type="hidden"><label for="reply-body">Your reply</label><textarea class="idk" id="reply-body" maxlength="2000" required></textarea><button class="but" type="submit">Send Email Reply</button></form></dialog>
+        <dialog class="workspace-dialog" id="reply-dialog"><form id="reply-form"><div class="dialog-heading"><div><p class="dialog-eyebrow">Customer conversation</p><h2>Reply by email</h2></div><button type="button" class="dialog-close" data-close-dialog="reply-dialog" aria-label="Close">Close</button></div><p id="reply-recipient"></p><input id="reply-message-id" type="hidden"><div id="message-thread" class="message-thread" aria-live="polite"></div><label for="reply-body">Your reply</label><textarea class="idk reply-composer" id="reply-body" maxlength="2000" required placeholder="Write a clear reply to the customer..."></textarea><button class="but" type="submit">Send Email Reply</button></form></dialog>
         <section class="sect dashboard-summary admin-page" id="dashboard" data-admin-page="dashboard" data-aos="fade-up">
             <div class="firt"><h1>Business Summary</h1><button type="button" class="section-action but" id="refresh-dashboard">Refresh</button></div>
             <div class="metric-grid dashboard-metrics">
@@ -200,13 +205,13 @@
             <div class="firt"><h1>Customers</h1><button type="button" class="section-action but" id="open-customer-form">New Customer</button></div>
             <div class="workspace-toolbar"><label><input id="customer-returning-only" type="checkbox"> Returning customers only</label><label for="customer-search">Search customers<input class="idk" id="customer-search" placeholder="Phone, name, email"></label></div>
             <div class="table compact-table"><table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Orders</th><th>Notes</th><th></th></tr></thead><tbody id="customers-table-body"></tbody></table></div>
-            <dialog class="workspace-dialog" id="customer-dialog"><form id="customer-form" method="dialog"><div class="dialog-heading"><div><p class="dialog-eyebrow">Customer record</p><h2>New customer</h2></div><button type="button" class="dialog-close" data-close-dialog="customer-dialog" aria-label="Close">Close</button></div><label for="customer-name">Full Name</label><input class="idk" id="customer-name" required><label for="customer-phone">Phone</label><input class="idk" id="customer-phone" required><label for="customer-email">Email</label><input class="idk" id="customer-email" type="email"><label for="customer-address">Address optional</label><input class="idk" id="customer-address"><label for="customer-notes">Notes</label><textarea class="idk" id="customer-notes"></textarea><p class="form-feedback" id="customer-feedback" aria-live="polite"></p><button class="but" type="submit">Save Customer</button></form></dialog>
+            <dialog class="workspace-dialog" id="customer-dialog"><form id="customer-form"><div class="dialog-heading"><div><p class="dialog-eyebrow">Customer record</p><h2>New customer</h2></div><button type="button" class="dialog-close" data-close-dialog="customer-dialog" aria-label="Close">Close</button></div><label for="customer-name">Full Name</label><input class="idk" id="customer-name" required><label for="customer-phone">Phone</label><input class="idk" id="customer-phone" required><label for="customer-email">Email</label><input class="idk" id="customer-email" type="email"><label for="customer-address">Address optional</label><input class="idk" id="customer-address"><label for="customer-notes">Notes</label><textarea class="idk" id="customer-notes"></textarea><p class="form-feedback" id="customer-feedback" aria-live="polite"></p><button class="but" type="submit">Save Customer</button></form></dialog>
         </section>
         <section class="sect ops-section admin-page" id="orders" data-admin-page="orders" data-aos="fade-up">
             <div class="firt"><h1>Orders and Tickets</h1><button type="button" class="section-action but" id="open-order-form">New Order</button></div>
             <div class="workspace-toolbar"><label for="order-status-filter">Order status<select id="order-status-filter"><option value="">All statuses</option><option value="received">Received</option><option value="washing">Washing</option><option value="ironing">Ironing</option><option value="packaging">Packaging</option><option value="ready">Ready</option><option value="collected">Collected</option><option value="cancelled">Cancelled</option></select></label><label><input id="order-balance-only" type="checkbox"> Outstanding balance only</label><label for="order-search">Search orders<input class="idk" id="order-search" placeholder="Ticket, customer, phone"></label></div>
             <div class="table compact-table"><table><thead><tr><th>Ticket</th><th>Customer</th><th>Phone</th><th>Status</th><th>Total</th><th>Balance</th><th>Payment</th><th>Collection</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="orders-table-body"></tbody></table></div>
-            <dialog class="workspace-dialog order-dialog" id="order-dialog"><form id="order-form" method="dialog"><div class="dialog-heading"><div><p class="dialog-eyebrow">Walk-in intake</p><h2>New order</h2></div><button type="button" class="dialog-close" data-close-dialog="order-dialog" aria-label="Close">Close</button></div><div class="dialog-grid"><div><label for="order-customer-name">Customer Name</label><input class="idk" id="order-customer-name" required><label for="order-customer-phone">Customer Phone</label><input class="idk" id="order-customer-phone" required><label for="order-customer-email">Customer Email</label><input class="idk" id="order-customer-email" type="email"></div><div><label for="order-price-select">Item</label><select class="idk" id="order-price-select" required></select><p class="field-help" id="order-price-note" aria-live="polite"></p><label for="order-service-type">Service</label><select class="idk" id="order-service-type"><option value="washing">Washing</option><option value="ironing">Ironing</option></select><label for="order-item-qty">Qty</label><input class="idk" id="order-item-qty" type="number" min="1" value="1"><button type="button" class="but" id="add-order-item">Add Item</button><p class="form-feedback" id="order-item-feedback" aria-live="polite"></p></div></div><ul id="order-item-list" class="order-item-list"></ul><div class="dialog-grid"><div><label for="order-discount">Discount</label><input class="idk" id="order-discount" type="number" min="0" value="0"><label for="order-paid">Amount Paid</label><input class="idk" id="order-paid" type="number" min="0" value="0"></div><div><label for="order-collection-date">Expected Collection</label><input class="idk" id="order-collection-date" type="datetime-local"><label for="order-notes">Order Notes</label><textarea class="idk" id="order-notes"></textarea></div></div><div class="order-totals"><p>Subtotal <strong id="order-subtotal">NGN 0</strong></p><p>Total <strong id="order-total">NGN 0</strong></p><p>Payment <strong id="order-payment-status">unpaid</strong></p></div><p class="form-feedback" id="order-feedback" aria-live="polite"></p><button class="but" type="submit">Create Order</button></form></dialog>
+            <dialog class="workspace-dialog order-dialog" id="order-dialog"><form id="order-form"><div class="dialog-heading"><div><p class="dialog-eyebrow">Walk-in intake</p><h2>New order</h2></div><button type="button" class="dialog-close" data-close-dialog="order-dialog" aria-label="Close">Close</button></div><div class="dialog-grid"><div><label for="order-customer-name">Customer Name</label><input class="idk" id="order-customer-name" required><label for="order-customer-phone">Customer Phone</label><input class="idk" id="order-customer-phone" required><label for="order-customer-email">Customer Email</label><input class="idk" id="order-customer-email" type="email"></div><div><label for="order-price-select">Item</label><select class="idk" id="order-price-select" required></select><p class="field-help" id="order-price-note" aria-live="polite"></p><label for="order-service-type">Service</label><select class="idk" id="order-service-type"><option value="washing">Washing</option><option value="ironing">Ironing</option></select><label for="order-item-qty">Qty</label><input class="idk" id="order-item-qty" type="number" min="1" value="1"><button type="button" class="but" id="add-order-item">Add Item</button><p class="form-feedback" id="order-item-feedback" aria-live="polite"></p></div></div><ul id="order-item-list" class="order-item-list"></ul><div class="dialog-grid"><div><label for="order-discount">Discount</label><input class="idk" id="order-discount" type="number" min="0" value="0"><label for="order-paid">Amount Paid</label><input class="idk" id="order-paid" type="number" min="0" value="0"></div><div><label for="order-collection-date">Expected Collection</label><input class="idk" id="order-collection-date" type="datetime-local"><label for="order-notes">Order Notes</label><textarea class="idk" id="order-notes"></textarea></div></div><div class="order-totals"><p>Subtotal <strong id="order-subtotal">NGN 0</strong></p><p>Total <strong id="order-total">NGN 0</strong></p><p>Payment <strong id="order-payment-status">unpaid</strong></p></div><p class="form-feedback" id="order-feedback" aria-live="polite"></p><button class="but" type="submit">Create Order</button></form></dialog>
             <dialog class="workspace-dialog detail-dialog" id="record-dialog"><div id="record-dialog-content"></div></dialog>
         </section>
 
@@ -253,7 +258,7 @@
             </div>
         </section>
         <div class="cp">
-            <p>&copy; <span data-current-year></span> <a href="index.html">Idojuan Laundry and Dry Cleaning Services</a> all rights reserved</p>
+            <p>&copy; <span data-current-year></span> <a href="index.html">Ido-Juan Laundry and Dry Cleaning Services</a> all rights reserved</p>
             <button id="arrow">&uparrow;</button>
         </div>
 

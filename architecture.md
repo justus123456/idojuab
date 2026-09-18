@@ -1,8 +1,8 @@
-﻿# Architecture
+# Architecture
 
 ## Overview
 
-Idojuan Laundry is a static laundry and dry cleaning website with a small admin dashboard. Supabase provides authentication and database storage. Netlify is the primary host and Netlify Edge Functions provide the deployed APIs.
+Ido-Juan Laundry is a static laundry and dry cleaning website with a small admin dashboard. Supabase provides authentication and database storage. Netlify is the primary host and Netlify Edge Functions provide the deployed APIs.
 
 The business has no pickup or delivery fleet. The public website is therefore built around reducing friction before an in-store visit: pricing, cost estimation, opening status, directions, phone/WhatsApp contact, FAQ, and contact messages.
 
