@@ -54,6 +54,13 @@
     if (!items.length) { const empty = document.createElement('p'); empty.textContent = 'No item details recorded.'; panel.appendChild(empty); }
     items.forEach((item) => detailRow(panel, item.item_name, `${item.quantity} x ${money(item.unit_price)} (${item.service_type})`)); openDialog('record-dialog');
   }
+  async function saveCustomer(row) {
+    const existing = await db.from('customers').select('id').eq('phone', row.phone).order('created_at', { ascending: true }).limit(1);
+    if (existing.error) return existing;
+    const existingId = existing.data?.[0]?.id;
+    if (existingId) return db.from('customers').update(row).eq('id', existingId);
+    return db.from('customers').insert(row);
+  }
   function renderCustomers() {
     const body = el('customers-table-body'); if (!body) return; body.textContent = '';
     const q = (el('customer-search')?.value || '').toLowerCase();
@@ -139,12 +146,20 @@
     if (!select) return;
     const prices = state.prices
       .filter((price) => price.id && String(price.cloth_type || '').trim() && Number.isFinite(Number(price.washing_price)) && Number.isFinite(Number(price.ironing_price)))
-      .sort((a, b) => String(a.cloth_type).localeCompare(String(b.cloth_type)));
+      .sort((a, b) => String(a.cloth_type).localeCompare(String(b.cloth_type)) || Number(a.id) - Number(b.id));
+    const counts = prices.reduce((map, price) => map.set(String(price.cloth_type).toLowerCase(), (map.get(String(price.cloth_type).toLowerCase()) || 0) + 1), new Map());
     select.textContent = '';
     select.add(new Option(prices.length ? 'Select an item' : 'No price items available', ''));
-    prices.forEach((price) => select.add(new Option(`${price.cloth_type} - washing ${money(price.washing_price)}, ironing ${money(price.ironing_price)}`, price.id)));
+    prices.forEach((price) => {
+      const name = String(price.cloth_type);
+      const duplicateLabel = counts.get(name.toLowerCase()) > 1 ? ` - price row ${price.id}` : '';
+      select.add(new Option(`${name}${duplicateLabel} - washing ${money(price.washing_price)}, ironing ${money(price.ironing_price)}`, price.id));
+    });
     select.disabled = prices.length === 0;
-    if (note) note.textContent = prices.length ? `${prices.length} saved price item${prices.length === 1 ? '' : 's'} available.` : 'Add a valid item under Prices before creating an order.';
+    const duplicateCount = prices.filter((price) => counts.get(String(price.cloth_type).toLowerCase()) > 1).length;
+    if (note) note.textContent = prices.length
+      ? `${prices.length} saved price item${prices.length === 1 ? '' : 's'} available.${duplicateCount ? ` ${duplicateCount} rows share a name; remove old duplicates in Prices.` : ''}`
+      : 'Add a valid item under Prices before creating an order.';
   }
   function totals() { const subtotal = (state.pending || []).reduce((n, i) => n + i.line_total, 0), discount = Number(el('order-discount')?.value || 0), total = Math.max(0, subtotal - discount), paid = Number(el('order-paid')?.value || 0); text('order-subtotal', money(subtotal)); text('order-total', money(total)); text('order-payment-status', paid >= total && total ? 'paid' : paid ? 'partial' : 'unpaid'); return { subtotal, discount, total, paid }; }
   function renderPending() { const list = el('order-item-list'); if (!list) return; list.textContent = ''; (state.pending || []).forEach((i, index) => { const li = document.createElement('li'); li.textContent = `${i.item_name} x ${i.quantity} = ${money(i.line_total)}`; const button = document.createElement('button'); button.textContent = 'Remove'; button.onclick = () => { state.pending.splice(index, 1); renderPending(); totals(); }; li.appendChild(button); list.appendChild(li); }); }  async function updateOrder(order, changes) { if (changes.status === 'collected') { const current = await profile(); changes.collected_by = current.profile?.id || null; } const { error } = await db.from('orders').update(changes).eq('id', order.id); if (error) return message(error.message, true); await audit('Updated order', 'order', order.id, order, changes); await load(); message('Order updated.'); }
@@ -200,7 +215,7 @@
     document.querySelectorAll('.workspace-dialog').forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
     el('customer-search')?.addEventListener('input', renderCustomers); el('customer-returning-only')?.addEventListener('change', renderCustomers); el('order-search')?.addEventListener('input', renderOrders); el('order-status-filter')?.addEventListener('change', renderOrders); el('order-balance-only')?.addEventListener('change', renderOrders); el('price-search')?.addEventListener('input', filterPriceRows); el('refresh-operations')?.addEventListener('click', () => load().then(() => message('Data refreshed.')).catch((error) => message(error.message, true))); el('order-discount')?.addEventListener('input', totals); el('order-paid')?.addEventListener('input', totals);
     el('add-order-item')?.addEventListener('click', () => { const price = state.prices.find((p) => String(p.id) === el('order-price-select').value); if (!price) return message('Select an item from the saved price list first.', true); const quantity = Math.max(1, Number(el('order-item-qty').value || 1)), service = el('order-service-type').value, unit = Number(service === 'ironing' ? price.ironing_price : price.washing_price); state.pending.push({ price_id: price.id, item_name: price.cloth_type, service_type: service, quantity, unit_price: unit, line_total: unit * quantity }); renderPending(); totals(); });
-    el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const { error } = await db.from('customers').upsert(row, { onConflict: 'phone' }); if (error) { message('Could not save customer: ' + error.message, true); window.alert('Could not save customer: ' + error.message); return; } event.target.reset(); closeDialog('customer-dialog'); await load(); message('Customer saved.'); });
+    el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const feedback = el('customer-feedback'); const { error } = await saveCustomer(row); if (error) { const detail = 'Could not save customer: ' + error.message; if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } message(detail, true); return; } if (feedback) { feedback.textContent = 'Customer saved.'; feedback.dataset.error = 'false'; } event.target.reset(); closeDialog('customer-dialog'); await load(); message('Customer saved.'); });
     el('order-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (state.creatingOrder) return;
@@ -211,7 +226,7 @@
       try {
         const t = totals();
         const customerPayload = { full_name: el('order-customer-name').value.trim(), phone: el('order-customer-phone').value.trim(), email: el('order-customer-email').value.trim().toLowerCase() || null };
-        const customerWrite = await db.from('customers').upsert(customerPayload, { onConflict: 'phone' });
+        const customerWrite = await saveCustomer(customerPayload);
         if (customerWrite.error) return message(customerWrite.error.message, true);
         const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).maybeSingle();
         if (customerRead.error || !customerRead.data?.id) return message('Customer could not be loaded. Confirm the operations SQL and admin RLS policies are installed.', true);

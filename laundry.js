@@ -259,25 +259,15 @@ function hidePreloader() {
 
 function setupLazyMap() {
     const iframe = document.querySelector(".map iframe[data-src]");
-    if (!iframe) return;
+    const button = document.getElementById("load-map");
+    const panel = document.getElementById("map-load-panel");
+    if (!iframe || !button) return;
 
-    const loadMap = () => {
+    button.addEventListener("click", () => {
         if (!iframe.src) iframe.src = iframe.dataset.src;
-    };
-
-    if (!("IntersectionObserver" in window)) {
-        loadMap();
-        return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-            loadMap();
-            observer.disconnect();
-        }
-    }, { rootMargin: "300px" });
-
-    observer.observe(iframe);
+        iframe.hidden = false;
+        if (panel) panel.hidden = true;
+    }, { once: true });
 }
 
 window.addEventListener("load", hidePreloader);

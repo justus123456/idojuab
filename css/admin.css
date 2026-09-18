@@ -1231,3 +1231,6 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .report-grid span { display: block; color: #77818a; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .report-grid strong { display: block; color: #25313a; font-size: 21px; margin-top: 5px; }
 @media (max-width: 700px) { .report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; } .pipeline-actions button { flex: 1 1 130px; } }
+.form-feedback { min-height: 1.3em; margin: 10px 0; color: #4d4d4d; }
+.form-feedback[data-error="true"] { color: #9b2c2c; }
+.field-help { min-height: 1.2em; margin: 6px 0 12px; color: #4d4d4d; font-size: 0.85rem; }

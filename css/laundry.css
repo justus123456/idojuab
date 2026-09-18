@@ -1380,3 +1380,33 @@ body {
 .status-result, .payment-note { max-width: 640px; margin: 12px auto; line-height: 1.6; }
 @media (max-width: 520px) { .status-form { grid-template-columns: 1fr; } .status-form button { width: 100%; } }
 .contact-honeypot { position: absolute !important; left: -10000px !important; width: 1px; height: 1px; overflow: hidden; }
+
+.map-load-panel {
+  min-height: 260px;
+  display: grid;
+  place-content: center;
+  gap: 14px;
+  text-align: center;
+  background: #eff0f4;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.map-load-panel p { margin: 0; color: #4d4d4d; }
+
+.load-map {
+  min-height: 42px;
+  border: 1px solid rgba(31, 31, 31, 0.25);
+  border-radius: 5px;
+  padding: 10px 14px;
+  font: inherit;
+  background: rgba(31, 31, 31, 0.9);
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .map-load-panel { min-height: 220px; }
+}
