@@ -155,6 +155,7 @@
       const duplicateLabel = counts.get(name.toLowerCase()) > 1 ? ` - price row ${price.id}` : '';
       select.add(new Option(`${name}${duplicateLabel} - washing ${money(price.washing_price)}, ironing ${money(price.ironing_price)}`, price.id));
     });
+    if (prices.length) select.value = String(prices[0].id);
     select.disabled = prices.length === 0;
     const duplicateCount = prices.filter((price) => counts.get(String(price.cloth_type).toLowerCase()) > 1).length;
     if (note) note.textContent = prices.length
@@ -162,7 +163,7 @@
       : 'Add a valid item under Prices before creating an order.';
   }
   function totals() { const subtotal = (state.pending || []).reduce((n, i) => n + i.line_total, 0), discount = Number(el('order-discount')?.value || 0), total = Math.max(0, subtotal - discount), paid = Number(el('order-paid')?.value || 0); text('order-subtotal', money(subtotal)); text('order-total', money(total)); text('order-payment-status', paid >= total && total ? 'paid' : paid ? 'partial' : 'unpaid'); return { subtotal, discount, total, paid }; }
-  function renderPending() { const list = el('order-item-list'); if (!list) return; list.textContent = ''; (state.pending || []).forEach((i, index) => { const li = document.createElement('li'); li.textContent = `${i.item_name} x ${i.quantity} = ${money(i.line_total)}`; const button = document.createElement('button'); button.textContent = 'Remove'; button.onclick = () => { state.pending.splice(index, 1); renderPending(); totals(); }; li.appendChild(button); list.appendChild(li); }); }  async function updateOrder(order, changes) { if (changes.status === 'collected') { const current = await profile(); changes.collected_by = current.profile?.id || null; } const { error } = await db.from('orders').update(changes).eq('id', order.id); if (error) return message(error.message, true); await audit('Updated order', 'order', order.id, order, changes); await load(); message('Order updated.'); }
+  function renderPending() { const list = el('order-item-list'); if (!list) return; list.textContent = ''; (state.pending || []).forEach((i, index) => { const li = document.createElement('li'); li.textContent = `${i.item_name} x ${i.quantity} = ${money(i.line_total)}`; const button = document.createElement('button'); button.type = 'button'; button.textContent = 'Remove'; button.onclick = () => { state.pending.splice(index, 1); renderPending(); totals(); }; li.appendChild(button); list.appendChild(li); }); }  async function updateOrder(order, changes) { if (changes.status === 'collected') { const current = await profile(); changes.collected_by = current.profile?.id || null; } const { error } = await db.from('orders').update(changes).eq('id', order.id); if (error) return message(error.message, true); await audit('Updated order', 'order', order.id, order, changes); await load(); message('Order updated.'); }
   async function deleteOrder(order) {
     const confirmed = window.confirm(`Delete order ${order.ticket_number}? This cannot be undone.`);
     if (!confirmed) return;
@@ -208,40 +209,81 @@
   }  function bind() {
     state.pending = [];    el('open-customer-form')?.addEventListener('click', () => openDialog('customer-dialog'));
     el('open-order-form')?.addEventListener('click', async () => {
+      state.pending = [];
+      renderPending();
+      totals();
       try { await load(); } catch (error) { message(error.message || 'Could not refresh the price list.', true); }
       openDialog('order-dialog');
     });
     document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => closeDialog(button.dataset.closeDialog)));
     document.querySelectorAll('.workspace-dialog').forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
     el('customer-search')?.addEventListener('input', renderCustomers); el('customer-returning-only')?.addEventListener('change', renderCustomers); el('order-search')?.addEventListener('input', renderOrders); el('order-status-filter')?.addEventListener('change', renderOrders); el('order-balance-only')?.addEventListener('change', renderOrders); el('price-search')?.addEventListener('input', filterPriceRows); el('refresh-operations')?.addEventListener('click', () => load().then(() => message('Data refreshed.')).catch((error) => message(error.message, true))); el('order-discount')?.addEventListener('input', totals); el('order-paid')?.addEventListener('input', totals);
-    el('add-order-item')?.addEventListener('click', () => { const price = state.prices.find((p) => String(p.id) === el('order-price-select').value); if (!price) return message('Select an item from the saved price list first.', true); const quantity = Math.max(1, Number(el('order-item-qty').value || 1)), service = el('order-service-type').value, unit = Number(service === 'ironing' ? price.ironing_price : price.washing_price); state.pending.push({ price_id: price.id, item_name: price.cloth_type, service_type: service, quantity, unit_price: unit, line_total: unit * quantity }); renderPending(); totals(); });
-    el('customer-form')?.addEventListener('submit', async (event) => { event.preventDefault(); const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null }; const feedback = el('customer-feedback'); const { error } = await saveCustomer(row); if (error) { const detail = 'Could not save customer: ' + error.message; if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } message(detail, true); return; } if (feedback) { feedback.textContent = 'Customer saved.'; feedback.dataset.error = 'false'; } event.target.reset(); closeDialog('customer-dialog'); await load(); message('Customer saved.'); });
+    el('add-order-item')?.addEventListener('click', () => {
+      const select = el('order-price-select');
+      const feedback = el('order-item-feedback');
+      const price = state.prices.find((entry) => String(entry.id) === String(select?.value || ''));
+      if (!price) { const detail = 'Choose an item from the price list first.'; if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } message(detail, true); return; }
+      const quantity = Math.max(1, Number(el('order-item-qty').value || 1));
+      const service = el('order-service-type').value;
+      const unit = Number(service === 'ironing' ? price.ironing_price : price.washing_price);
+      if (!Number.isFinite(unit)) return message('This price row has an invalid service price.', true);
+      state.pending.push({ price_id: price.id, item_name: price.cloth_type, service_type: service, quantity, unit_price: unit, line_total: unit * quantity });
+      renderPending(); totals();
+      if (feedback) { feedback.textContent = `${price.cloth_type} added.`; feedback.dataset.error = 'false'; }
+    });
+    el('customer-form')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const feedback = el('customer-feedback');
+      const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null };
+      if (!row.full_name || !row.phone) { if (feedback) { feedback.textContent = 'Full name and phone are required.'; feedback.dataset.error = 'true'; } return; }
+      const submitButton = event.submitter;
+      if (submitButton) submitButton.disabled = true;
+      try {
+        const { error } = await saveCustomer(row);
+        if (error) { const detail = 'Could not save customer: ' + error.message; if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } message(detail, true); return; }
+        if (feedback) { feedback.textContent = 'Customer saved.'; feedback.dataset.error = 'false'; }
+        event.target.reset(); closeDialog('customer-dialog');
+        try { await load(); } catch (refreshError) { message('Customer saved, but the list could not refresh: ' + refreshError.message, true); }
+        message('Customer saved.');
+      } catch (error) {
+        const detail = 'Could not save customer: ' + (error.message || 'Unknown error');
+        if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; }
+        message(detail, true);
+      } finally { if (submitButton) submitButton.disabled = false; }
+    });
     el('order-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
+      const feedback = el('order-feedback');
+      const fail = (detail) => { if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } message(detail, true); };
       if (state.creatingOrder) return;
-      if (!state.pending.length) return message('Add at least one item first.', true);
+      if (!state.pending.length) return fail('Add at least one item first.');
       state.creatingOrder = true;
       const submitButton = event.submitter;
       if (submitButton) submitButton.disabled = true;
       try {
         const t = totals();
         const customerPayload = { full_name: el('order-customer-name').value.trim(), phone: el('order-customer-phone').value.trim(), email: el('order-customer-email').value.trim().toLowerCase() || null };
+        if (!customerPayload.full_name || !customerPayload.phone) return fail('Customer name and phone are required.');
         const customerWrite = await saveCustomer(customerPayload);
-        if (customerWrite.error) return message(customerWrite.error.message, true);
-        const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).maybeSingle();
-        if (customerRead.error || !customerRead.data?.id) return message('Customer could not be loaded. Confirm the operations SQL and admin RLS policies are installed.', true);
+        if (customerWrite.error) return fail('Could not save the customer: ' + customerWrite.error.message);
+        const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).order('created_at', { ascending: true }).limit(1);
+        if (customerRead.error || !customerRead.data?.[0]?.id) return fail('Customer could not be loaded: ' + (customerRead.error?.message || 'no customer ID returned'));
         const ticket = `LD-${crypto.randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
         const current = await profile();
         const submissionKey = crypto.randomUUID();
-        const orderWrite = await db.from('orders').insert({ submission_key: submissionKey, ticket_number: ticket, customer_id: customerRead.data.id, subtotal: t.subtotal, discount: t.discount, total: t.total, amount_paid: t.paid, payment_status: t.paid >= t.total ? 'paid' : t.paid ? 'partial' : 'unpaid', created_by: current.profile?.id || null, expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), notes: el('order-notes').value.trim() }).select().maybeSingle();
-        if (orderWrite.error || !orderWrite.data?.id) return message(orderWrite.error?.message || 'Order could not be created. Check the operations SQL and RLS policies are installed.', true);
-        if (t.paid > 0) { const initialPayment = await db.from('payments').insert({ order_id: orderWrite.data.id, amount: t.paid, payment_method: 'cash', recorded_by: current.profile?.id || null }); if (initialPayment.error) return message(initialPayment.error.message, true); }
+        const orderWrite = await db.from('orders').insert({ submission_key: submissionKey, ticket_number: ticket, customer_id: customerRead.data[0].id, subtotal: t.subtotal, discount: t.discount, total: t.total, amount_paid: t.paid, payment_status: t.paid >= t.total ? 'paid' : t.paid ? 'partial' : 'unpaid', created_by: current.profile?.id || null, expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), notes: el('order-notes').value.trim() }).select().maybeSingle();
+        if (orderWrite.error || !orderWrite.data?.id) return fail(orderWrite.error?.message || 'Order could not be created. Run the operations SQL and check admin RLS.');
+        if (t.paid > 0) { const initialPayment = await db.from('payments').insert({ order_id: orderWrite.data.id, amount: t.paid, payment_method: 'cash', recorded_by: current.profile?.id || null }); if (initialPayment.error) return fail('Order created, but payment could not be recorded: ' + initialPayment.error.message); }
         const itemsWrite = await db.from('order_items').insert(state.pending.map((item) => ({ ...item, order_id: orderWrite.data.id })));
-        if (itemsWrite.error) return message(itemsWrite.error.message, true);
+        if (itemsWrite.error) return fail('Order created, but items could not be saved: ' + itemsWrite.error.message);
         await audit('Created order', 'order', orderWrite.data.id, null, { ticket_number: ticket, total: t.total });
-        event.target.reset(); state.pending = []; renderPending(); closeDialog('order-dialog'); await load(); message(`Order ${ticket} created.`);
-      } finally { state.creatingOrder = false; if (submitButton) submitButton.disabled = false; }
-    });    el('settings-form')?.addEventListener('submit', async (event) => {
+        event.target.reset(); state.pending = []; renderPending(); closeDialog('order-dialog');
+        try { await load(); } catch (refreshError) { message('Order created, but the list could not refresh: ' + refreshError.message, true); }
+        message(`Order ${ticket} created.`);
+      } catch (error) { fail('Could not create order: ' + (error.message || 'Unknown error')); }
+      finally { state.creatingOrder = false; if (submitButton) submitButton.disabled = false; }
+    });
+    el('settings-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const rows = [
         ['business_hours', el('setting-hours').value], ['payment_instructions', el('setting-payment').value], ['whatsapp_number', el('setting-whatsapp').value],
