@@ -308,6 +308,7 @@
   }
   document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); });
+    bind();
     text('security-session-email', 'Checking session...');
     let sessionResult;
     try {
@@ -325,7 +326,6 @@
       window.location.href = 'login.html';
       return;
     }
-    bind();
     await renderSecurity();
     try { await load(); } catch (error) { message('Admin data could not load. Run the latest Supabase SQL setup, then refresh. Details: ' + error.message, true); }
   });
