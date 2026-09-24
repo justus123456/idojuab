@@ -57,12 +57,43 @@
   }
   async function saveCustomer(row) {
     const result = await db.rpc('save_customer_record', { p_full_name: row.full_name, p_phone: row.phone, p_email: row.email, p_address: row.address, p_notes: row.notes });
-    if (!result.error || result.error.code !== 'PGRST202') return result;
+    if (!result.error) return result;
     const existing = await db.from('customers').select('id').eq('phone', row.phone).order('created_at', { ascending: true }).limit(1);
     if (existing.error) return existing;
     const existingId = existing.data?.[0]?.id;
-    if (existingId) return db.from('customers').update(row).eq('id', existingId);
-    return db.from('customers').insert(row);
+    if (existingId) return db.from('customers').update(row).eq('id', existingId).select('id').single();
+    return db.from('customers').insert(row).select('id').single();
+  }
+  async function createOrderDirect(customerId, ticket, submissionKey, totalsValue, collectionAt, notes) {
+    const current = await profile();
+    const order = await db.from('orders').insert({
+      customer_id: customerId,
+      ticket_number: ticket,
+      submission_key: submissionKey,
+      subtotal: totalsValue.subtotal,
+      discount: totalsValue.discount,
+      total: totalsValue.total,
+      amount_paid: totalsValue.paid,
+      payment_status: totalsValue.paid >= totalsValue.total && totalsValue.total > 0 ? 'paid' : totalsValue.paid > 0 ? 'partial' : 'unpaid',
+      expected_collection_at: collectionAt,
+      notes,
+      created_by: current.profile?.id || null
+    }).select('id').single();
+    if (order.error) return order;
+    const items = await db.from('order_items').insert(state.pending.map((item) => ({ ...item, order_id: order.data.id })));
+    if (items.error) {
+      await db.from('orders').delete().eq('id', order.data.id);
+      return items;
+    }
+    if (totalsValue.paid > 0) {
+      const payment = await db.from('payments').insert({ order_id: order.data.id, amount: totalsValue.paid, payment_method: 'cash', recorded_by: current.profile?.id || null });
+      if (payment.error) {
+        await db.from('orders').delete().eq('id', order.data.id);
+        return payment;
+      }
+    }
+    await audit('Created order', 'order', order.data.id, null, { ticket_number: ticket, total: totalsValue.total });
+    return order;
   }
   function renderCustomers() {
     const body = el('customers-table-body'); if (!body) return; body.textContent = '';
@@ -226,7 +257,8 @@
       const feedback = el('order-item-feedback');
       const price = state.prices.find((entry) => String(entry.id) === String(select?.value || ''));
       if (!price) { const detail = 'Choose an item from the price list first.'; if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } message(detail, true); return; }
-      const quantity = Math.max(1, Number(el('order-item-qty').value || 1));
+       const quantity = Math.floor(Number(el('order-item-qty').value || 1));
+       if (!Number.isFinite(quantity) || quantity < 1) { const detail = 'Quantity must be at least 1.'; if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } return message(detail, true); }
       const service = el('order-service-type').value;
       const unit = Number(service === 'ironing' ? price.ironing_price : price.washing_price);
       if (!Number.isFinite(unit)) return message('This price row has an invalid service price.', true);
@@ -239,8 +271,9 @@
       const feedback = el('customer-feedback');
       const row = { full_name: el('customer-name').value.trim(), phone: el('customer-phone').value.trim(), email: el('customer-email').value.trim().toLowerCase() || null, address: el('customer-address').value.trim() || null, notes: el('customer-notes').value.trim() || null };
       if (!row.full_name || !row.phone) { if (feedback) { feedback.textContent = 'Full name and phone are required.'; feedback.dataset.error = 'true'; } return; }
-      const submitButton = event.submitter;
-      if (submitButton) submitButton.disabled = true;
+       const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+       const originalLabel = submitButton?.textContent;
+       if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Saving...'; }
       try {
         const { error } = await saveCustomer(row);
         if (error) { const detail = 'Could not save customer: ' + error.message; if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; } message(detail, true); return; }
@@ -252,7 +285,7 @@
         const detail = 'Could not save customer: ' + (error.message || 'Unknown error');
         if (feedback) { feedback.textContent = detail; feedback.dataset.error = 'true'; }
         message(detail, true);
-      } finally { if (submitButton) submitButton.disabled = false; }
+       } finally { if (submitButton) { submitButton.disabled = false; submitButton.textContent = originalLabel || 'Save Customer'; } }
     });
     el('order-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -261,8 +294,9 @@
       if (state.creatingOrder) return;
       if (!state.pending.length) return fail('Add at least one item first.');
       state.creatingOrder = true;
-      const submitButton = event.submitter;
-      if (submitButton) submitButton.disabled = true;
+       const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+       const originalLabel = submitButton?.textContent;
+       if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Creating...'; }
       try {
         const t = totals();
         const customerPayload = { full_name: el('order-customer-name').value.trim(), phone: el('order-customer-phone').value.trim(), email: el('order-customer-email').value.trim().toLowerCase() || null };
@@ -273,14 +307,16 @@
         if (!customerId) { const customerRead = await db.from('customers').select('id').eq('phone', customerPayload.phone).order('created_at', { ascending: true }).limit(1); if (customerRead.error || !customerRead.data?.[0]?.id) return fail('Customer could not be loaded: ' + (customerRead.error?.message || 'no customer ID returned')); customerId = customerRead.data[0].id; }
         const ticket = `LD-${makeUuid().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
         const submissionKey = makeUuid();
-        const orderWrite = await db.rpc('create_walk_in_order', { p_customer_id: customerId, p_ticket_number: ticket, p_submission_key: submissionKey, p_subtotal: t.subtotal, p_discount: t.discount, p_total: t.total, p_amount_paid: t.paid, p_expected_collection_at: el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString(), p_notes: el('order-notes').value.trim(), p_items: state.pending });
-        if (orderWrite.error || !orderWrite.data) return fail(orderWrite.error?.message || 'Order could not be created. Run the latest operations SQL in Supabase.');
-        const orderId = orderWrite.data;
+         const collectionAt = el('order-collection-date').value ? new Date(el('order-collection-date').value).toISOString() : new Date(Date.now() + Math.max(1, Number(state.settings.default_turnaround_hours || 48)) * 60 * 60 * 1000).toISOString();
+         let orderWrite = await db.rpc('create_walk_in_order', { p_customer_id: customerId, p_ticket_number: ticket, p_submission_key: submissionKey, p_subtotal: t.subtotal, p_discount: t.discount, p_total: t.total, p_amount_paid: t.paid, p_expected_collection_at: collectionAt, p_notes: el('order-notes').value.trim(), p_items: state.pending });
+         if (orderWrite.error) orderWrite = await createOrderDirect(customerId, ticket, submissionKey, t, collectionAt, el('order-notes').value.trim());
+         if (orderWrite.error || !orderWrite.data) return fail(orderWrite.error?.message || 'Order could not be created.');
+         const orderId = orderWrite.data;
         event.target.reset(); state.pending = []; renderPending(); closeDialog('order-dialog');
         try { await load(); } catch (refreshError) { message('Order created, but the list could not refresh: ' + refreshError.message, true); }
         message(`Order ${ticket} created.`);
       } catch (error) { fail('Could not create order: ' + (error.message || 'Unknown error')); }
-      finally { state.creatingOrder = false; if (submitButton) submitButton.disabled = false; }
+       finally { state.creatingOrder = false; if (submitButton) { submitButton.disabled = false; submitButton.textContent = originalLabel || 'Create Order'; } }
     });
     el('settings-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();

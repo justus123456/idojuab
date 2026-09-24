@@ -288,29 +288,30 @@
                         <p>Get in touch before visiting, or use the map for directions to our shop.</p>
                     </div>
                     <div class="box">
-                        <form class="contact-form" id="contact-form" data-aos="fade-right">
+                            <form class="contact-form" id="contact-form">
                             <div class="contact-honeypot" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
                             <h3>send message</h3>
                             <div class="input-box" data-aos="fade-right" data-aos-delay="20">
                                 <label for="name">name</label>
-                                <input type="text" placeholder="name" id="name" required>
+                                <input type="text" name="name" autocomplete="name" placeholder="name" id="name" required>
                             </div>
                             <div class="input-box" data-aos="fade-right" data-aos-delay="40">
                                 <label for="mail">email</label>
-                                <input type="email" placeholder="email" id="mail" required>
+                                <input type="email" name="email" autocomplete="email" placeholder="email" id="mail" required>
                             </div>
                             <div class="input-box" data-aos="fade-right" data-aos-delay="60">
                                 <label for="info">message</label>
-                                <textarea placeholder="message" id="info" required></textarea>
+                                <textarea name="message" placeholder="message" id="info" required></textarea>
                             </div>
                             <div class="input-box" data-aos="fade-right" data-aos-delay="100">
                                 <input type="submit" value="send" class="btn">
                             </div>
+                            <p id="contact-feedback" class="contact-feedback" aria-live="polite"></p>
                             <p id="success-message"><button id="clear" type="button"><span class="close"><i class="fas fa-times"></i></span></button> message received. For faster follow-up, WhatsApp 08063894359.</p>
                         </form>
 
                         <div class="map" data-aos="fade-left">
-                            <div class="map-load-panel" id="map-load-panel"><p>Load the interactive map only when you need it.</p><button class="load-map" id="load-map" type="button">View interactive map</button></div><iframe hidden title="Ido-Juan Laundry location map" data-src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15756.149034500775!2d7.3539399!3d9.1511077!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104ddf5afabd6683%3A0x3121e9f963afd580!2sIdo-Juan%20Laundry%20and%20dry%20cleaning%20services!5e0!3m2!1sen!2sng!4v1722087592027!5m2!1sen!2sng" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            <iframe title="Ido-Juan Laundry location map" src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15756.149034500775!2d7.3539399!3d9.1511077!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104ddf5afabd6683%3A0x3121e9f963afd580!2sIdo-Juan%20Laundry%20and%20dry%20cleaning%20services!5e0!3m2!1sen!2sng!4v1722087592027!5m2!1sen!2sng" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                             <a class="directions-link" href="https://www.google.com/maps/search/?api=1&query=Ido-Juan%20Laundry%20and%20dry%20cleaning%20services%20Kubwa%20Abuja" target="_blank" rel="noopener">Get directions</a>
                         </div>
                         <div class="icon-container" data-aos="fade-up" data-aos-delay="100">

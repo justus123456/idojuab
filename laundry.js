@@ -249,6 +249,56 @@ function setupContactHelpers() {
     }
 }
 
+function setupContactForm() {
+    const form = document.getElementById("contact-form");
+    const successMessage = document.getElementById("success-message");
+    const feedback = document.getElementById("contact-feedback");
+    if (!form) return;
+    if (feedback) {
+        feedback.style.display = "block";
+        feedback.style.width = "100%";
+        feedback.style.minHeight = "22px";
+        feedback.style.margin = "8px 0 0";
+        feedback.style.padding = "0";
+        feedback.style.border = "0";
+        feedback.style.background = "transparent";
+        feedback.style.color = "#1f1f1f";
+    }
+
+    const close = document.querySelector(".close");
+    if (close && successMessage) close.addEventListener("click", () => { successMessage.style.display = "none"; });
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submit = form.querySelector("button[type=submit], input[type=submit]");
+        const originalLabel = submit?.value || submit?.textContent;
+        const setFeedback = (value, error = false) => {
+            if (feedback) { feedback.textContent = value; feedback.dataset.error = String(error); }
+        };
+        const nameInput = document.getElementById("name");
+        const emailInput = document.getElementById("mail");
+        const messageInput = document.getElementById("info");
+        const websiteInput = document.getElementById("website");
+        const name = nameInput?.value.trim() || "";
+        const email = emailInput?.value.trim().toLowerCase() || "";
+        const message = messageInput?.value.trim() || "";
+        if (!name || !email || !message) { setFeedback("Please complete your name, email, and message.", true); return; }
+        if (submit) { submit.disabled = true; if ("value" in submit) submit.value = "Sending..."; else submit.textContent = "Sending..."; }
+        try {
+            const response = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, message, website: websiteInput?.value || "" }) });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "The message could not be sent. Please try WhatsApp instead.");
+            form.reset();
+            setFeedback("Message sent. We will get back to you soon.");
+            if (successMessage) successMessage.style.display = "block";
+        } catch (error) {
+            setFeedback(error.message || "The message could not be sent.", true);
+        } finally {
+            if (submit) { submit.disabled = false; if ("value" in submit) submit.value = originalLabel || "send"; else submit.textContent = originalLabel || "send"; }
+        }
+    });
+}
+
 function hidePreloader() {
     const preLoad = document.querySelector(".preloader");
     const body = document.querySelector("body");
@@ -281,6 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupFaq();
     setupEstimator();
     setupContactHelpers();
+    setupContactForm();
     setupLazyMap();
     setupOperationsPublic(client);
 
@@ -317,52 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(poll, 5000);
     poll();
 
-    const form = document.getElementById("contact-form");
-    if (!form) return;
-
-    const close = document.querySelector(".close");
-    const successMessage = document.getElementById("success-message");
-    if (close && successMessage) {
-        close.addEventListener("click", () => {
-            successMessage.style.display = "none";
-        });
-    }
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const nameInput = document.getElementById("name");
-        const emailInput = document.getElementById("mail");
-        const messageInput = document.getElementById("info");
-        const websiteInput = document.getElementById("website");
-
-        if (!nameInput || !emailInput || !messageInput || !successMessage) return;
-
-        const name = nameInput.value.trim();
-        const email = emailInput.value.trim().toLowerCase();
-        const message = messageInput.value.trim();
-
-        if (!name || !email || !message) return;
-
-        const response = await fetch("/api/contact", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, message, website: websiteInput?.value || "" }),
-        });
-
-        if (!response.ok) {
-            console.error("Error submitting message");
-            return;
-        }
-
-        nameInput.value = "";
-        emailInput.value = "";
-        messageInput.value = "";
-        successMessage.style.display = "block";
-        setTimeout(() => {
-            successMessage.style.display = "none";
-        }, 5000);
-    });
 });
 
 async function setupOperationsPublic(client) {
