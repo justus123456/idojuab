@@ -350,6 +350,8 @@
     el('export-messages')?.addEventListener('click', async () => { const result = await db.from('messages').select('id,name,email,message,is_replied,created_at').order('id', { ascending: false }); if (result.error) return message('Messages could not be exported: ' + result.error.message, true); exportCsv(`messages-${exportStamp}.csv`, result.data || []); });
   }
   document.addEventListener('DOMContentLoaded', async () => {
+    const recordDialog = el('record-dialog');
+    if (recordDialog?.parentElement !== document.body) document.body.appendChild(recordDialog);
     document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); });
     bind();
     text('security-session-email', 'Checking session...');
