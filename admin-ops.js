@@ -2,7 +2,7 @@
   'use strict';
   const db = window.supabaseClient;
   if (!db) return;
-  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [], payments: [], staff: [], orderView: 'active' };
+  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [], payments: [], staff: [], orderView: 'active', performanceRange: 'daily' };
   const el = (id) => document.getElementById(id);
   const money = (n) => `NGN ${Number(n || 0).toLocaleString('en-NG')}`;
   const text = (id, value) => { if (el(id)) el(id).textContent = value; };
@@ -150,6 +150,63 @@
     });
   }
   function renderPopularServices() { const list = el('popular-services'); if (!list) return; const popular = {}; state.items.forEach((item) => { const record = popular[item.item_name] || { quantity: 0, revenue: 0 }; record.quantity += Number(item.quantity); record.revenue += Number(item.line_total); popular[item.item_name] = record; }); list.textContent = ''; Object.entries(popular).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5).forEach(([name, value]) => { const row = document.createElement('p'); row.textContent = name + " - " + value.quantity + " item(s) - " + money(value.revenue); list.appendChild(row); }); }
+  const performanceStatuses = ['received', 'washing', 'ironing', 'packaging', 'ready', 'collected', 'cancelled'];
+  const performanceColors = { received: '#4b7bec', washing: '#18a999', ironing: '#f0a202', packaging: '#9b5de5', ready: '#2f855a', collected: '#2563eb', cancelled: '#d64545' };
+  function startOfDay(value) { const date = new Date(value); date.setHours(0, 0, 0, 0); return date; }
+  function ensurePerformanceControls() {
+    const chart = el('revenue-chart');
+    if (!chart || el('performance-controls')) return;
+    const controls = document.createElement('div');
+    controls.id = 'performance-controls';
+    controls.className = 'performance-controls';
+    controls.innerHTML = '<label>View<select id=performance-range><option value=daily>Daily</option><option value=monthly>Monthly</option><option value=yearly>Yearly</option><option value=custom>Custom range</option></select></label><label>From<input id=performance-start type=date></label><label>To<input id=performance-end type=date></label><button type=button class=detail-link id=performance-apply>Apply range</button>';
+    const summary = document.createElement('p'); summary.id = 'performance-summary'; summary.className = 'performance-summary';
+    const legend = document.createElement('div'); legend.className = 'performance-legend';
+    performanceStatuses.forEach((status) => { const item = document.createElement('span'); const swatch = document.createElement('i'); swatch.style.background = performanceColors[status]; item.append(swatch, document.createTextNode(status)); legend.appendChild(item); });
+    chart.before(controls, summary, legend);
+    const range = el('performance-range');
+    const refresh = () => { state.performanceRange = range?.value || 'daily'; renderDashboard(); };
+    range?.addEventListener('change', refresh);
+    el('performance-apply')?.addEventListener('click', () => { state.performanceRange = 'custom'; if (range) range.value = 'custom'; renderDashboard(); });
+  }
+  function performancePeriods() {
+    const now = startOfDay(new Date()); const range = state.performanceRange || 'daily';
+    const startInput = el('performance-start')?.value; const endInput = el('performance-end')?.value;
+    let start; let end = new Date(now); end.setHours(23, 59, 59, 999);
+    if (range === 'custom' && startInput && endInput) { start = startOfDay(`${startInput}T00:00:00`); end = new Date(`${endInput}T23:59:59`); }
+    else if (range === 'yearly') { start = new Date(now.getFullYear() - 4, 0, 1); }
+    else if (range === 'monthly') { start = new Date(now.getFullYear(), now.getMonth() - 11, 1); }
+    else { start = new Date(now); start.setDate(start.getDate() - 6); }
+    if (start > end) [start, end] = [end, start];
+    const dayCount = Math.max(1, Math.ceil((end - start) / 86400000) + 1);
+    const mode = range === 'custom' ? (dayCount > 62 ? 'monthly' : 'daily') : range;
+    const periods = [];
+    if (mode === 'yearly') for (let year = start.getFullYear(); year <= end.getFullYear(); year += 1) periods.push({ key: String(year), label: String(year), start: new Date(year, 0, 1), end: new Date(year, 11, 31, 23, 59, 59, 999) });
+    else if (mode === 'monthly') { const cursor = new Date(start.getFullYear(), start.getMonth(), 1); const finalMonth = new Date(end.getFullYear(), end.getMonth(), 1); while (cursor <= finalMonth) { const monthStart = new Date(cursor); const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59, 999); periods.push({ key: `${cursor.getFullYear()}-${cursor.getMonth()}`, label: cursor.toLocaleDateString('en-NG', { month: 'short', year: '2-digit' }), start: monthStart, end: monthEnd }); cursor.setMonth(cursor.getMonth() + 1); } }
+    else { const cursor = startOfDay(start); while (cursor <= end) { const dayStart = new Date(cursor); const dayEnd = new Date(cursor); dayEnd.setHours(23, 59, 59, 999); periods.push({ key: dayStart.toISOString().slice(0, 10), label: dayStart.toLocaleDateString('en-NG', { day: 'numeric', month: 'short' }), start: dayStart, end: dayEnd }); cursor.setDate(cursor.getDate() + 1); } }
+    return { periods, start, end };
+  }
+  function renderPerformanceChart() {
+    ensurePerformanceControls();
+    const chart = el('revenue-chart'); const summary = el('performance-summary'); if (!chart) return;
+    const { periods, start, end } = performancePeriods();
+    const inRange = state.orders.filter((order) => { const created = new Date(order.created_at); return created >= start && created <= end; });
+    const paid = inRange.reduce((sum, order) => sum + Number(order.amount_paid || 0), 0);
+    const outstanding = inRange.reduce((sum, order) => sum + Math.max(0, Number(order.total || 0) - Number(order.amount_paid || 0)), 0);
+    if (summary) summary.textContent = `${inRange.length} order(s) | Paid ${money(paid)} | Outstanding ${money(outstanding)}`;
+    chart.textContent = '';
+    const highest = Math.max(1, ...periods.map((period) => inRange.filter((order) => { const created = new Date(order.created_at); return created >= period.start && created <= period.end; }).length));
+    periods.forEach((period) => {
+      const orders = inRange.filter((order) => { const created = new Date(order.created_at); return created >= period.start && created <= period.end; });
+      const column = document.createElement('div'); column.className = 'performance-column';
+      const stack = document.createElement('div'); stack.className = 'performance-stack';
+      performanceStatuses.forEach((status) => { const count = orders.filter((order) => order.status === status).length; if (!count) return; const segment = document.createElement('i'); segment.style.height = `${Math.max(8, (count / highest) * 100)}%`; segment.style.background = performanceColors[status]; segment.title = `${period.label}: ${count} ${status} order(s)`; stack.appendChild(segment); });
+      const label = document.createElement('span'); label.textContent = period.label;
+      const total = document.createElement('b'); total.textContent = String(orders.length);
+      column.title = `${period.label}: ${orders.length} order(s), paid ${money(orders.reduce((sum, order) => sum + Number(order.amount_paid || 0), 0))}`;
+      column.append(stack, total, label); chart.appendChild(column);
+    });
+  }
   function renderDashboard() {
     const alerts = el('dashboard-alerts');
     if (alerts) { alerts.textContent = ''; const items = [
@@ -158,6 +215,7 @@
       `${state.messages.filter((m) => !m.is_replied).length} unread customer message(s)`
     ]; items.forEach((value) => { const li = document.createElement('li'); li.textContent = value; alerts.appendChild(li); }); }
     ['received', 'washing', 'ironing', 'packaging', 'ready', 'collected'].forEach((status) => text(`pipeline-${status}`, state.orders.filter((order) => order.status === status).length));
+    queueMicrotask(renderPerformanceChart);
     const chart = el('revenue-chart');
     if (chart) { chart.textContent = ''; const days = Array.from({ length: 7 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - (6 - index)); date.setHours(0, 0, 0, 0); return date; }); const values = days.map((date) => state.orders.filter((order) => { const created = new Date(order.created_at); return created >= date && created < new Date(date.getTime() + 86400000); }).reduce((sum, order) => sum + Number(order.amount_paid || 0), 0)); const highest = Math.max(...values, 1); values.forEach((value, index) => { const bar = document.createElement('div'); bar.innerHTML = `<span>${days[index].toLocaleDateString('en-NG', { weekday: 'short' })}</span><i style="height:${Math.max(8, Math.round((value / highest) * 100))}%"></i><b>${money(value)}</b>`; chart.appendChild(bar); }); }    const body = el('dashboard-orders-body'); if (!body) return; body.textContent = '';
     state.orders.slice(0, 5).forEach((o) => { const row = body.insertRow(); rowValues(row, [o.ticket_number, o.customers?.full_name || '', o.status, o.payment_status, money(o.total), new Date(o.created_at).toLocaleDateString()]); });
