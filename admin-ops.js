@@ -230,6 +230,13 @@
       window.prompt('Copy notification:', note);
     }
   }  async function saveFaq(faq, changes) { const { error } = await db.from('faqs').update(changes).eq('id', faq.id); if (error) return message(error.message, true); await audit('Updated FAQ', 'faq', faq.id, faq, changes); await load(); }
+  function filterPriceRows() {
+    const query = (el('price-search')?.value || '').trim().toLowerCase();
+    document.querySelectorAll('.pricing .dat tr, .pricing .datam tr').forEach((row) => {
+      row.hidden = Boolean(query) && !row.textContent.toLowerCase().includes(query);
+    });
+  }
+
   function exportCsv(filename, rows) {
     if (!rows.length) return message('Nothing to export.');
     const escapeCell = (value) => {
