@@ -2,7 +2,7 @@
   'use strict';
   const db = window.supabaseClient;
   if (!db) return;
-  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [], payments: [], staff: [] };
+  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [], payments: [], staff: [], orderView: 'active' };
   const el = (id) => document.getElementById(id);
   const money = (n) => `NGN ${Number(n || 0).toLocaleString('en-NG')}`;
   const text = (id, value) => { if (el(id)) el(id).textContent = value; };
@@ -103,12 +103,36 @@
       const row = body.insertRow(); rowValues(row, [c.full_name, c.phone, c.email, c.total_orders, c.notes]); const action = row.insertCell(); const button = document.createElement('button'); button.type = 'button'; button.className = 'detail-link'; button.textContent = 'View'; button.onclick = () => showCustomer(c); action.appendChild(button);
     });
   }
+  function ensureOrderViewSwitch() {
+    const toolbar = el('order-status-filter')?.closest('.workspace-toolbar');
+    if (!toolbar || el('order-view-switch')) return;
+    const switcher = document.createElement('div');
+    switcher.id = 'order-view-switch';
+    switcher.className = 'order-view-switch';
+    switcher.setAttribute('role', 'group');
+    switcher.setAttribute('aria-label', 'Order views');
+    switcher.innerHTML = '<button type=button data-order-view=active>Active orders <span id=active-order-count>0</span></button><button type=button data-order-view=history>Completed history <span id=history-order-count>0</span></button><button type=button data-order-view=all>All orders</button>';
+    toolbar.before(switcher);
+  }
   function renderOrders() {
     const body = el('orders-table-body'); if (!body) return; body.textContent = '';
     const q = (el('order-search')?.value || '').toLowerCase();
     const statusFilter = el('order-status-filter')?.value || '';
     const balanceOnly = Boolean(el('order-balance-only')?.checked);
-    state.orders.filter((o) => {
+    const isArchived = (order) => ['collected', 'cancelled'].includes(order.status);
+    const visibleOrders = state.orders.filter((order) => {
+      if (state.orderView === 'active') return !isArchived(order);
+      if (state.orderView === 'history') return isArchived(order);
+      return true;
+    });
+    document.querySelectorAll('[data-order-view]').forEach((button) => {
+      const active = button.dataset.orderView === state.orderView;
+      button.className = active ? 'but' : 'detail-link';
+      button.setAttribute('aria-pressed', String(active));
+    });
+    text('active-order-count', state.orders.filter((order) => !isArchived(order)).length);
+    text('history-order-count', state.orders.filter(isArchived).length);
+    visibleOrders.filter((o) => {
       const balance = Number(o.total || 0) - Number(o.amount_paid || 0);
       return `${o.ticket_number} ${o.customers?.full_name} ${o.customers?.phone} ${o.status}`.toLowerCase().includes(q) && (!statusFilter || o.status === statusFilter) && (!balanceOnly || balance > 0);
     }).forEach((o) => {
@@ -258,6 +282,13 @@
     });
     document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => closeDialog(button.dataset.closeDialog)));
     document.querySelectorAll('.workspace-dialog').forEach((dialog) => dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }));
+    document.querySelectorAll('[data-order-view]').forEach((button) => button.addEventListener('click', () => { state.orderView = button.dataset.orderView || 'active'; renderOrders(); }));
+    el('order-status-filter')?.addEventListener('change', () => {
+      const status = el('order-status-filter')?.value;
+      if (['collected', 'cancelled'].includes(status)) state.orderView = 'history';
+      else if (status) state.orderView = 'active';
+      renderOrders();
+    });
     el('customer-search')?.addEventListener('input', renderCustomers); el('customer-returning-only')?.addEventListener('change', renderCustomers); el('order-search')?.addEventListener('input', renderOrders); el('order-status-filter')?.addEventListener('change', renderOrders); el('order-balance-only')?.addEventListener('change', renderOrders); el('price-search')?.addEventListener('input', filterPriceRows); el('refresh-operations')?.addEventListener('click', () => load().then(() => message('Data refreshed.')).catch((error) => message(error.message, true))); window.addEventListener('admin-data-refresh', () => load().catch((error) => message('Audit log could not refresh: ' + error.message, true))); el('order-discount')?.addEventListener('input', totals); el('order-paid')?.addEventListener('input', totals);
     el('add-order-item')?.addEventListener('click', () => {
       const select = el('order-price-select');
@@ -352,6 +383,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const recordDialog = el('record-dialog');
     if (recordDialog?.parentElement !== document.body) document.body.appendChild(recordDialog);
+    ensureOrderViewSwitch();
     document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); });
     bind();
     text('security-session-email', 'Checking session...');
