@@ -152,7 +152,18 @@
   function renderPopularServices() { const list = el('popular-services'); if (!list) return; const popular = {}; state.items.forEach((item) => { const record = popular[item.item_name] || { quantity: 0, revenue: 0 }; record.quantity += Number(item.quantity); record.revenue += Number(item.line_total); popular[item.item_name] = record; }); list.textContent = ''; Object.entries(popular).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5).forEach(([name, value]) => { const row = document.createElement('p'); row.textContent = name + " - " + value.quantity + " item(s) - " + money(value.revenue); list.appendChild(row); }); }
   const performanceStatuses = ['received', 'washing', 'ironing', 'packaging', 'ready', 'collected', 'cancelled'];
   const performanceColors = { received: '#4b7bec', washing: '#18a999', ironing: '#f0a202', packaging: '#9b5de5', ready: '#2f855a', collected: '#2563eb', cancelled: '#d64545' };
+  const pipelineCopy = { received: 'At the counter', washing: 'Being cleaned', ironing: 'Finishing touches', packaging: 'Being packed', ready: 'Awaiting pickup', collected: 'Finished orders' };
   function startOfDay(value) { const date = new Date(value); date.setHours(0, 0, 0, 0); return date; }
+  function decoratePipeline() {
+    document.querySelectorAll('[data-pipeline-status]').forEach((button) => {
+      const status = button.dataset.pipelineStatus; const count = button.querySelector('span');
+      button.classList.add('pipeline-stage', `pipeline-${status}`);
+      button.textContent = '';
+      const label = document.createElement('strong'); label.textContent = status;
+      const detail = document.createElement('small'); detail.textContent = pipelineCopy[status] || '';
+      button.append(label, detail, count);
+    });
+  }
   function ensurePerformanceControls() {
     const chart = el('revenue-chart');
     if (!chart || el('performance-controls')) return;
@@ -430,7 +441,7 @@
     el('record-ledger-payment')?.addEventListener('click', recordLedgerPayment);
     el('export-orders-report')?.addEventListener('click', () => exportCsv('orders-report.csv', state.orders.map((order) => ({ ticket_number: order.ticket_number, customer: order.customers?.full_name || '', status: order.status, total: order.total, amount_paid: order.amount_paid, outstanding: Math.max(0, Number(order.total) - Number(order.amount_paid)), created_at: order.created_at })))); el('export-payments-report')?.addEventListener('click', () => exportCsv('payments-report.csv', state.payments.map((payment) => ({ date: payment.created_at, ticket_number: payment.orders?.ticket_number || '', customer: payment.orders?.customers?.full_name || '', amount: payment.amount, payment_method: payment.payment_method, recorded_by: payment.recorded_by || '' })))); el('export-customers-report')?.addEventListener('click', () => exportCsv('customers-report.csv', state.customers.map((customer) => ({ full_name: customer.full_name, phone: customer.phone, email: customer.email || '', total_orders: customer.total_orders, created_at: customer.created_at }))));
     el('refresh-dashboard')?.addEventListener('click', () => load().then(() => message('Dashboard refreshed.')).catch((error) => message(error.message, true)));
-    document.querySelectorAll('[data-pipeline-status]').forEach((button) => button.addEventListener('click', () => { const filter = el('order-status-filter'); if (filter) filter.value = button.dataset.pipelineStatus; window.location.hash = 'orders'; renderOrders(); }));
+    document.querySelectorAll('[data-pipeline-status]').forEach((button) => button.addEventListener('click', () => { const status = button.dataset.pipelineStatus; const filter = el('order-status-filter'); if (filter) filter.value = status; state.orderView = status === 'collected' ? 'history' : 'active'; window.location.hash = 'orders'; renderOrders(); }));
     document.querySelectorAll('[data-dashboard-page]').forEach((link) => link.addEventListener('click', () => { window.location.hash = link.dataset.dashboardPage; }));        const exportStamp = new Date().toISOString().slice(0, 10);
     el('export-prices')?.addEventListener('click', () => exportCsv(`prices-${exportStamp}.csv`, state.prices.map((price) => ({ item: price.cloth_type, washing_price: price.washing_price, ironing_price: price.ironing_price, gender: price.gender }))));
     el('export-orders')?.addEventListener('click', () => exportCsv(`orders-${exportStamp}.csv`, state.orders.map((order) => ({ ticket_number: order.ticket_number, customer: order.customers?.full_name || '', phone: order.customers?.phone || '', status: order.status, total: order.total, amount_paid: order.amount_paid, outstanding: Math.max(0, Number(order.total) - Number(order.amount_paid)), payment_status: order.payment_status, expected_collection: order.expected_collection_at || '', created_at: order.created_at, notes: order.notes || '' }))));
@@ -442,6 +453,7 @@
     const recordDialog = el('record-dialog');
     if (recordDialog?.parentElement !== document.body) document.body.appendChild(recordDialog);
     ensureOrderViewSwitch();
+    decoratePipeline();
     document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); });
     bind();
     text('security-session-email', 'Checking session...');
