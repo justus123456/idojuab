@@ -1191,6 +1191,10 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .order-totals p { margin: 0; color: #65707a; font-size: 12px; }
 .order-totals strong { display: block; color: #202a32; font-size: 16px; margin-top: 4px; }
 #record-dialog-content h3 { border-top: 1px solid #dce2e6; margin: 22px 0 8px; padding-top: 20px; font-size: 15px; }
+.customer-payment-history { width: 100%; border-collapse: collapse; margin: 12px 0 4px; font-size: 12px; }
+.customer-payment-history th { color: #77818a; font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 9px 7px; text-align: left; text-transform: uppercase; }
+.customer-payment-history td { border-top: 1px solid #e2e7ea; color: #3f4b54; padding: 10px 7px; }
+.customer-payment-history td:nth-child(3) { color: #1e6a44; font-weight: 700; }
 #record-dialog-content > p { color: #53606a; font-size: 13px; line-height: 1.55; margin: 9px 0; }
 #record-dialog-content .detail-link { display: block; margin: 8px 0; text-align: left; width: 100%; }
 @media (max-width: 640px) { .workspace-dialog { width: calc(100vw - 20px); max-height: calc(100vh - 20px); } .dialog-grid, .order-totals { grid-template-columns: 1fr; gap: 12px; } .workspace-dialog form, #record-dialog-content { padding: 22px 18px; } }
