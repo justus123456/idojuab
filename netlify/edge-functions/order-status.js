@@ -15,9 +15,6 @@ function normalizeTicket(value) {
   return String(value || "").trim().toUpperCase().replace(/\s+/g, "").slice(0, 30);
 }
 
-function formatFirstName(fullName) {
-  return String(fullName || "Customer").trim().split(/\s+/)[0] || "Customer";
-}
 
 async function supabaseFetch(path, options = {}) {
   return fetch(`${SUPABASE_URL}${path}`, {
@@ -42,11 +39,12 @@ export default async (request) => {
   }
 
   const ticket = normalizeTicket(new URL(request.url).searchParams.get("ticket"));
-  if (!ticket) {
+  if (!/^[A-Z0-9-]{6,30}$/.test(ticket)) {
     return jsonResponse(400, { error: "Ticket number is required." });
   }
 
   const params = new URLSearchParams({
+    // This public endpoint deliberately exposes no customer, payment, or item data.
     select: "ticket_number,status,expected_collection_at,ready_at,collected_at",
     ticket_number: `eq.${ticket}`,
     limit: "1",
@@ -67,12 +65,7 @@ export default async (request) => {
 
   return jsonResponse(200, {
     ticketNumber: order.ticket_number,
-    customerName: formatFirstName(order.customers?.full_name),
     status: order.status,
-    total,
-    amountPaid: paid,
-    outstandingBalance: Math.max(total - paid, 0),
-    paymentStatus: order.payment_status,
     expectedCollectionAt: order.expected_collection_at,
     readyAt: order.ready_at,
     collectedAt: order.collected_at,

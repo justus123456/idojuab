@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "login.html";
     return;
   }
+  if (window.AOS) {
+    window.AOS.init({ duration: 600, once: true });
+  }
 
   function normalizePrice(item) {
     return {

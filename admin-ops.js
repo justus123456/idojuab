@@ -8,7 +8,18 @@
   const text = (id, value) => { if (el(id)) el(id).textContent = value; };
   const message = (value, error) => { let node = el('ops-feedback'); if (!node) { node = document.createElement('p'); node.id = 'ops-feedback'; node.className = 'admin-feedback'; el('dashboard')?.prepend(node); } node.textContent = value; node.dataset.error = error ? 'true' : 'false'; };
   const makeUuid = () => globalThis.crypto?.randomUUID?.() || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, (c) => (c ^ globalThis.crypto?.getRandomValues?.(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
-  async function profile() { const { data } = await db.auth.getSession(); const email = data.session?.user.email; if (!email) return { session: null, profile: null }; const result = await db.from('users').select('id,email').ilike('email', email).maybeSingle(); return { session: data.session, profile: result.data }; }
+  async function profile() {
+    const { data, error: sessionError } = await db.auth.getSession();
+    const session = data?.session;
+    const email = session?.user?.email;
+    if (sessionError || !email) return { session: null, profile: null, error: sessionError };
+    const result = await db.from('users').select('id,email,role').ilike('email', email).maybeSingle();
+    return { session, profile: result.data?.role === 'admin' ? result.data : null, error: result.error || (result.data?.role === 'admin' ? null : new Error('Admin access is required.')) };
+  }
+  async function denyAdminAccess() {
+    await db.auth.signOut().catch(() => {});
+    window.location.replace('login.html');
+  }
   async function audit(action, type, id, oldValue, newValue) { const current = await profile(); await db.from('audit_logs').insert({ admin_id: current.profile?.id || null, admin_email: current.session?.user.email, action, entity_type: type, entity_id: String(id || ''), old_value: oldValue || null, new_value: newValue || null }); }
   async function load() {
     const results = await Promise.all([
@@ -467,12 +478,11 @@
     ensureOrderViewSwitch();
     decoratePipeline();
     document.querySelectorAll('[data-current-year]').forEach((node) => { node.textContent = String(new Date().getFullYear()); });
-    bind();
     text('security-session-email', 'Checking session...');
-    let sessionResult;
+    let access;
     try {
-      sessionResult = await Promise.race([
-        db.auth.getSession(),
+      access = await Promise.race([
+        profile(),
         new Promise((_, reject) => window.setTimeout(() => reject(new Error('Session check timed out. Please refresh and sign in again.')), 8000))
       ]);
     } catch (error) {
@@ -480,11 +490,13 @@
       message(error.message, true);
       return;
     }
-    if (!sessionResult.data?.session) {
-      text('security-session-email', 'No active session');
-      window.location.href = 'login.html';
+    if (!access?.session || !access?.profile) {
+      text('security-session-email', 'Admin access required');
+      await denyAdminAccess();
       return;
     }
+    bind();
+    db.auth.onAuthStateChange((_event, session) => { if (!session) window.location.replace('login.html'); });
     await renderSecurity();
     try { await load(); } catch (error) { message('Admin data could not load. Run the latest Supabase SQL setup, then refresh. Details: ' + error.message, true); }
   });

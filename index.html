@@ -48,15 +48,15 @@
 
         <header>
             <a href="#home" class="logo">Ido-Juan laundry</a>
-            <div class="menuToggle" onclick="toggleMenu();"></div>
+            <div class="menuToggle"></div>
             <ul class="nav">
-                <li><a href="#home" onclick="toggleMenu();">home</a></li>
-                <li><a href="#about" onclick="toggleMenu();">about</a></li>
-                <li><a href="#system" onclick="toggleMenu();">system</a></li>
-                <li><a href="#pricing" onclick="toggleMenu();">pricing</a></li>
-                <li><a href="#order-status" onclick="toggleMenu();">order status</a></li>
-                <li><a href="#faq" onclick="toggleMenu();">FAQ</a></li>
-                <li><a href="#contact" onclick="toggleMenu();">contact</a></li>
+                <li><a href="#home">home</a></li>
+                <li><a href="#about">about</a></li>
+                <li><a href="#system">system</a></li>
+                <li><a href="#pricing">pricing</a></li>
+                <li><a href="#order-status">order status</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contact">contact</a></li>
             </ul>
             <span id="store-status" class="store-status" aria-live="polite">checking hours</span>
         </header>
@@ -340,23 +340,14 @@
         </main>
 
         <div class="cp">
-            <p>&copy; 2024 <a href="#home">Ido-Juan Laundry and Dry Cleaning Services</a> all rights reserved</p>
+            <p>&copy; <span data-current-year></span> <a href="#home">Ido-Juan Laundry and Dry Cleaning Services</a> all rights reserved</p>
             <h4><a href="login.html">admin</a></h4>
             <button id="arrow" type="button" aria-label="Back to top">&uparrow;</button>
         </div>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D1F5W8WSJ"></script>
-        <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-2D1F5W8WSJ');
-        </script>
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
         <script src="supabase-config.js" defer></script>
         <script src="laundry.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" integrity="sha512-A7AYk1fGKX6S2SsHywmPkrnzTZHrgiVT7GcQkLGDe2ev0aWb8zejytzS8wjo7PGEXKqJOrjQ4oORtnimIRZBtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script>
-            AOS.init({ duration: 450, once: true, disable: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
-        </script>
     </body>
 </html>
