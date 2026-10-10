@@ -332,10 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStoreStatus();
     document.querySelector(".menuToggle")?.addEventListener("click", toggleMenu);
     document.querySelectorAll(".nav a").forEach((link) => link.addEventListener("click", toggleMenu));
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = window.gtag || function gtag() { window.dataLayer.push(arguments); };
-    window.gtag("js", new Date());
-    window.gtag("config", "G-2D1F5W8WSJ");
     if (window.AOS) {
         window.AOS.init({ duration: 450, once: true, disable: window.matchMedia("(prefers-reduced-motion: reduce)").matches });
     }
