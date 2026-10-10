@@ -2,7 +2,7 @@
   'use strict';
   const db = window.supabaseClient;
   if (!db) return;
-  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [], payments: [], staff: [], orderView: 'active', performanceRange: 'daily' };
+  const state = { prices: [], customers: [], orders: [], items: [], messages: [], admins: [], settings: {}, faqs: [], payments: [], staff: [], permissions: [], current: null, governanceReady: false, orderView: 'active', performanceRange: 'daily' };
   const el = (id) => document.getElementById(id);
   const money = (n) => `NGN ${Number(n || 0).toLocaleString('en-NG')}`;
   const text = (id, value) => { if (el(id)) el(id).textContent = value; };
@@ -22,19 +22,20 @@
   }
   async function audit(action, type, id, oldValue, newValue) { const current = await profile(); await db.from('audit_logs').insert({ admin_id: current.profile?.id || null, admin_email: current.session?.user.email, action, entity_type: type, entity_id: String(id || ''), old_value: oldValue || null, new_value: newValue || null }); }
   async function load() {
+    const current = await profile();
     const results = await Promise.all([
       db.from('prices').select('*').order('id'), db.from('customers').select('*').order('created_at', { ascending: false }),
       db.from('orders').select('*, customers(full_name, phone)').order('created_at', { ascending: false }), db.from('order_items').select('*').order('created_at'),
-      db.from('messages').select('*').order('id', { ascending: false }), db.from('users').select('id,username,email,role,created_via,created_at').order('created_at', { ascending: false }), db.from('business_settings').select('*'), db.from('faqs').select('*').order('sort_order'), db.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100), db.from('payments').select('*, orders(ticket_number, customers(full_name))').order('created_at', { ascending: false }), db.from('staff_profiles').select('*')
+      db.from('messages').select('*').order('id', { ascending: false }), db.from('users').select('id,username,email,role,created_via,created_at').order('created_at', { ascending: false }), db.from('business_settings').select('*'), db.from('faqs').select('*').order('sort_order'), db.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100), db.from('payments').select('*, orders(ticket_number, customers(full_name))').order('created_at', { ascending: false }), db.from('staff_profiles').select('*'), db.from('staff_permissions').select('*')
     ]);
     const required = results.slice(0, 9).find((result) => result.error);
     if (required) throw required.error;
     const unavailable = [];
     if (results[9].error) unavailable.push('Payment Ledger');
-    if (results[10].error) unavailable.push('Staff Roles');
+    if (results[10].error) unavailable.push('Staff Roles'); if (results[11].error) unavailable.push('Authority Controls');
     state.prices = results[0].data || []; state.customers = results[1].data || []; state.orders = results[2].data || []; state.items = results[3].data || [];
     state.messages = results[4].data || []; state.admins = results[5].data || [];
-    state.settings = Object.fromEntries((results[6].data || []).map((r) => [r.key, r.value])); state.faqs = results[7].data || []; state.payments = results[9].data || []; state.staff = results[10].data || [];
+    state.settings = Object.fromEntries((results[6].data || []).map((r) => [r.key, r.value])); state.faqs = results[7].data || []; state.payments = results[9].data || []; state.staff = results[10].data || []; state.permissions = results[11].data || []; state.current = current.profile; state.governanceReady = !results[10].error && !results[11].error;
     render(results[8].data || []); fillPriceSelect();
     if (unavailable.length) message(unavailable.join(' and ') + ' need the latest Supabase SQL setup before they can load.', true);
   }
@@ -277,9 +278,16 @@
     const methodNode = el('report-payment-methods'); if (methodNode) { methodNode.textContent = ''; const methods = {}; state.payments.forEach((payment) => { methods[payment.payment_method] = (methods[payment.payment_method] || 0) + Number(payment.amount || 0); }); Object.entries(methods).forEach(([method, amount]) => { const row = document.createElement('p'); row.textContent = `${method}: ${money(amount)}`; methodNode.appendChild(row); }); if (!Object.keys(methods).length) methodNode.textContent = 'No ledger payments recorded yet.'; }
     const serviceNode = el('report-services'); if (serviceNode) { serviceNode.textContent = ''; const items = {}; state.items.forEach((item) => { items[item.item_name] = (items[item.item_name] || 0) + Number(item.line_total || 0); }); Object.entries(items).sort((a, b) => b[1] - a[1]).slice(0, 5).forEach(([name, amount]) => { const row = document.createElement('p'); row.textContent = `${name}: ${money(amount)}`; serviceNode.appendChild(row); }); if (!Object.keys(items).length) serviceNode.textContent = 'No order items recorded yet.'; }
   }
+  function staffRole(userId) { return state.staff.find((profile) => String(profile.user_id) === String(userId))?.operational_role || 'manager'; }
+  function isOwner() { return state.governanceReady && Boolean(state.current?.id) && staffRole(state.current.id) === 'owner'; }
+  function hasAuthority(permission) { if (!state.governanceReady) return false; if (isOwner()) return true; const override = state.permissions.find((entry) => String(entry.user_id) === String(state.current?.id) && entry.permission === permission); if (override) return Boolean(override.is_granted); return staffRole(state.current?.id) === 'manager' && permission === 'manage_roles'; }
   function renderStaff() {
-    const body = el('staff-table-body'); if (!body) return; body.textContent = ''; const profiles = new Map(state.staff.map((profile) => [String(profile.user_id), profile]));
-    state.admins.filter((admin) => admin.role === 'admin').forEach((admin) => { const profile = profiles.get(String(admin.id)); const row = body.insertRow(); rowValues(row, [admin.username || '-', admin.email, profile?.operational_role || 'manager']); const cell = row.insertCell(); const select = document.createElement('select'); ['owner', 'manager', 'secretary', 'laundry_staff'].forEach((role) => select.add(new Option(role.replaceAll('_', ' '), role))); select.value = profile?.operational_role || 'manager'; select.onchange = () => saveStaffRole(admin, select.value); cell.appendChild(select); });
+    const body = el('staff-table-body'); if (!body) return; body.textContent = ''; const canManageRoles = hasAuthority('manage_roles'); const canManageAuthorities = isOwner();
+    state.admins.filter((admin) => admin.role === 'admin').forEach((admin) => {
+      const role = staffRole(admin.id); const row = body.insertRow(); rowValues(row, [admin.username || '-', admin.email, role.replaceAll('_', ' ')]);
+      const roleCell = row.insertCell(); const roleSelect = document.createElement('select'); const roles = isOwner() ? ['owner', 'manager', 'secretary', 'laundry_staff'] : ['manager', 'secretary', 'laundry_staff']; if (!roles.includes(role)) roles.unshift(role); roles.forEach((value) => roleSelect.add(new Option(value.replaceAll('_', ' '), value))); roleSelect.value = role; roleSelect.disabled = !canManageRoles || (!isOwner() && role === 'owner'); roleSelect.onchange = () => saveStaffRole(admin, roleSelect.value); roleCell.appendChild(roleSelect);
+      const authorityCell = row.insertCell(); if (canManageAuthorities) { const authority = state.permissions.find((entry) => String(entry.user_id) === String(admin.id) && entry.permission === 'manage_roles'); const select = document.createElement('select'); select.add(new Option('Role control: default', '')); select.add(new Option('Role control: granted', 'true')); select.add(new Option('Role control: revoked', 'false')); select.value = authority ? String(authority.is_granted) : ''; select.onchange = () => saveStaffAuthority(admin, select.value); authorityCell.appendChild(select); } else authorityCell.textContent = 'Owner only';
+    });
   }
   function renderSettings() {
     const fields = {
@@ -340,7 +348,8 @@
     const amountPaid = Number(order.amount_paid || 0) + amount; const changes = { amount_paid: amountPaid, payment_status: amountPaid >= Number(order.total || 0) ? 'paid' : 'partial' };
     const { error } = await db.from('orders').update(changes).eq('id', order.id); if (error) return message(error.message, true);
     await audit('Recorded payment', 'payment', order.id, null, { amount, payment_method: method }); await load(); message(`Payment of ${money(amount)} recorded as ${method}.`);
-  }  async function saveStaffRole(admin, role) { const { error } = await db.from('staff_profiles').upsert({ user_id: admin.id, operational_role: role }); if (error) return message(error.message, true); await audit('Updated staff role', 'staff_profile', admin.id, null, { role }); await load(); message('Staff role updated.'); }
+  }  async function saveStaffRole(admin, role) { const { error } = await db.rpc('set_staff_role', { p_user_id: admin.id, p_role: role }); if (error) return message(error.message, true); await load(); message('Staff role updated.'); }
+  async function saveStaffAuthority(admin, value) { const { error } = await db.rpc('set_staff_permission', { p_user_id: admin.id, p_permission: 'manage_roles', p_granted: value === '' ? null : value === 'true' }); if (error) return message(error.message, true); await load(); message('Role authority updated.'); }
   async function recordLedgerPayment() { const order = state.orders.find((entry) => entry.id === el('payment-order-select')?.value); const amount = Number(el('payment-amount')?.value || 0); const method = el('payment-method')?.value || 'cash'; if (!order) return message('Choose an order with an outstanding balance.', true); const outstanding = Math.max(0, Number(order.total) - Number(order.amount_paid)); if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding) return message(`Enter an amount up to ${money(outstanding)}.`, true); const current = await profile(); const payment = await db.from('payments').insert({ order_id: order.id, amount, payment_method: method, recorded_by: current.profile?.id || null }); if (payment.error) return message(payment.error.message, true); const amountPaid = Number(order.amount_paid) + amount; const update = await db.from('orders').update({ amount_paid: amountPaid, payment_status: amountPaid >= Number(order.total) ? 'paid' : 'partial' }).eq('id', order.id); if (update.error) return message(update.error.message, true); await audit('Recorded ledger payment', 'payment', order.id, null, { amount, method }); el('payment-amount').value = ''; await load(); message(`Payment of ${money(amount)} recorded.`); }
   async function notifyCustomer(order) {
     const balance = Math.max(0, Number(order.total) - Number(order.amount_paid));
