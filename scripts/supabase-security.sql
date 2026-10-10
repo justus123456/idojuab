@@ -651,3 +651,26 @@ begin
   if public.current_staff_role() <> 'owner' then
     raise exception 'Only the owner can grant or revoke staff authorities';
   end if;
+  if p_permission <> 'manage_roles' then
+    raise exception 'Invalid staff authority';
+  end if;
+  if not exists (select 1 from public.users where id = p_user_id and role = 'admin') then
+    raise exception 'The selected user is not an approved admin';
+  end if;
+  select id into v_caller_id from public.users where lower(email) = lower(auth.email()) and role = 'admin' limit 1;
+  if p_granted is null then
+    delete from public.staff_permissions where user_id = p_user_id and permission = p_permission;
+  else
+    insert into public.staff_permissions (user_id, permission, is_granted, updated_by, updated_at)
+    values (p_user_id, p_permission, p_granted, v_caller_id, now())
+    on conflict (user_id, permission) do update set is_granted = excluded.is_granted, updated_by = excluded.updated_by, updated_at = now();
+  end if;
+  insert into public.audit_logs (admin_id, admin_email, action, entity_type, entity_id, new_value)
+  values (v_caller_id, auth.email(), 'Updated staff authority', 'staff_permission', p_user_id::text, jsonb_build_object('permission', p_permission, 'granted', p_granted));
+end;
+$$;
+
+revoke all on function public.set_staff_role(bigint, text) from public;
+grant execute on function public.set_staff_role(bigint, text) to authenticated;
+revoke all on function public.set_staff_permission(bigint, text, boolean) from public;
+grant execute on function public.set_staff_permission(bigint, text, boolean) to authenticated;
