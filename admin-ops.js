@@ -152,14 +152,23 @@
       const balance = Number(o.total || 0) - Number(o.amount_paid || 0);
       return `${o.ticket_number} ${o.customers?.full_name} ${o.customers?.phone} ${o.status}`.toLowerCase().includes(q) && (!statusFilter || o.status === statusFilter) && (!balanceOnly || balance > 0);
     }).forEach((o) => {
-      const row = body.insertRow(); rowValues(row, [o.ticket_number, o.customers?.full_name, o.customers?.phone, o.status, money(o.total), money(Number(o.total) - Number(o.amount_paid)), o.payment_status, o.expected_collection_at ? new Date(o.expected_collection_at).toLocaleString() : '', o.notes || '-']);
-      const statusCell = row.cells[3]; statusCell.textContent = ''; const statusBadge = document.createElement('span'); statusBadge.className = `order-status status-${o.status}`; statusBadge.textContent = o.status; statusCell.appendChild(statusBadge);
-      const paymentCell = row.cells[6]; paymentCell.textContent = ''; const paymentBadge = document.createElement('span'); paymentBadge.className = `payment-status payment-${o.payment_status}`; paymentBadge.textContent = o.payment_status; paymentCell.appendChild(paymentBadge);
+      const row = body.insertRow(); row.className = 'order-row';
+      const ticketCell = row.insertCell(); ticketCell.className = 'order-ticket-cell'; ticketCell.textContent = o.ticket_number;
+      const customerCell = row.insertCell(); customerCell.className = 'order-customer-cell';
+      const customerName = document.createElement('strong'); customerName.textContent = o.customers?.full_name || 'Customer unavailable';
+      const phone = document.createElement('small'); phone.textContent = o.customers?.phone || 'No phone recorded'; customerCell.append(customerName, phone);
+      const statusCell = row.insertCell(); statusCell.className = 'order-progress-cell'; const statusBadge = document.createElement('span'); statusBadge.className = `order-status status-${o.status}`; statusBadge.textContent = o.status; statusCell.appendChild(statusBadge);
+      const paymentCell = row.insertCell(); paymentCell.className = 'order-payment-cell';
+      const collectionCell = row.insertCell(); collectionCell.className = 'order-collection-cell'; collectionCell.textContent = o.expected_collection_at ? new Date(o.expected_collection_at).toLocaleString() : 'Not scheduled';
       const cell = row.insertCell(); cell.className = 'order-actions-cell'; const actions = document.createElement('div'); actions.className = 'order-actions';
       const view = document.createElement('button'); view.type = 'button'; view.className = 'detail-link'; view.textContent = 'View'; view.onclick = () => showOrder(o); actions.appendChild(view);
       const select = document.createElement('select'); select.className = 'order-stage-select'; select.setAttribute('aria-label', `Update stage for ${o.ticket_number}`); ['received','washing','ironing','packaging','ready','collected','cancelled'].forEach((status) => select.add(new Option(status, status))); select.value = o.status;
-      select.onchange = () => { if (select.value === 'collected' && Number(o.total || 0) > Number(o.amount_paid || 0)) finalizeCollectionPayment(o, select); else updateOrder(o, { status: select.value, ready_at: select.value === 'ready' ? new Date().toISOString() : o.ready_at, collected_at: select.value === 'collected' ? new Date().toISOString() : o.collected_at }); }; actions.appendChild(select);
+      select.onchange = () => { if (select.value === 'collected' && Number(o.total || 0) > Number(o.amount_paid || 0)) finalizeCollectionPayment(o, select); else updateOrder(o, { status: select.value, ready_at: select.value === 'ready' ? new Date().toISOString() : o.ready_at, collected_at: select.value === 'collected' ? new Date().toISOString() : o.collected_at }); }; statusCell.appendChild(select);
       const balance = Math.max(0, Number(o.total || 0) - Number(o.amount_paid || 0));
+      const total = document.createElement('strong'); total.textContent = money(o.total);
+      const balanceText = document.createElement('small'); balanceText.textContent = balance > 0 ? `${money(balance)} remaining` : 'Fully paid';
+      const paymentBadge = document.createElement('span'); paymentBadge.className = `payment-status payment-${o.payment_status}`; paymentBadge.textContent = o.payment_status;
+      paymentCell.append(total, balanceText, paymentBadge);
       if (balance > 0) {
         const paymentInput = document.createElement('input'); paymentInput.type = 'number'; paymentInput.min = '1'; paymentInput.max = String(balance); paymentInput.step = '0.01'; paymentInput.placeholder = 'Payment'; paymentInput.className = 'payment-input';
         const payment = document.createElement('div'); payment.className = 'inline-payment'; const paymentButton = document.createElement('button'); paymentButton.type = 'button'; paymentButton.className = 'record-payment'; paymentButton.textContent = 'Record'; paymentButton.onclick = () => recordPayment(o, Number(paymentInput.value));
