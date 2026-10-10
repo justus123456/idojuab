@@ -1195,6 +1195,14 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .customer-payment-history th { color: #77818a; font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 9px 7px; text-align: left; text-transform: uppercase; }
 .customer-payment-history td { border-top: 1px solid #e2e7ea; color: #3f4b54; padding: 10px 7px; }
 .customer-payment-history td:nth-child(3) { color: #1e6a44; font-weight: 700; }
+.customer-payment-summary { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 18px; }
+.customer-payment-summary span { background: #edf5f0; border: 1px solid #cfe1d5; color: #43504a; font-size: 12px; padding: 9px 10px; }
+.customer-payment-summary strong { color: #17613d; display: block; margin-top: 3px; }
+.customer-order-payment-list { display: grid; gap: 12px; }
+.customer-order-payment { border: 1px solid #dce2e6; border-radius: 6px; padding: 14px; }
+.customer-order-payment-head, .customer-order-pager { align-items: center; display: flex; justify-content: space-between; gap: 10px; }
+.customer-order-payment-stats { color: #5b6871; font-size: 12px; margin: 8px 0; }
+.customer-order-pager { justify-content: center; margin-top: 16px; }
 #record-dialog-content > p { color: #53606a; font-size: 13px; line-height: 1.55; margin: 9px 0; }
 #record-dialog-content .detail-link { display: block; margin: 8px 0; text-align: left; width: 100%; }
 @media (max-width: 640px) { .workspace-dialog { width: calc(100vw - 20px); max-height: calc(100vh - 20px); } .dialog-grid, .order-totals { grid-template-columns: 1fr; gap: 12px; } .workspace-dialog form, #record-dialog-content { padding: 22px 18px; } }
