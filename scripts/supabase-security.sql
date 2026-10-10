@@ -123,9 +123,7 @@ with check (public.is_admin());
 drop policy if exists "prices admin update" on public.prices;
 create policy "prices admin update"
 on public.prices
-for updateLoad the interactive map only when you need it.
-
-View interactive map
+for update
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
