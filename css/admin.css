@@ -1289,3 +1289,15 @@ body[data-admin-page="pricing"] #pricing-female { padding-top: 24px; min-height:
 .message-table .delete-message { margin-left: 7px; border: 0; color: #9b2c2c; background: transparent; cursor: pointer; }
 @media (max-width: 640px) { .message-inbox-head { align-items: flex-start; flex-direction: column; } .message-inbox-panel { border-radius: 6px; } }
 @media (max-width: 640px) { .reply-composer { min-height: 240px; height: 34vh; } }
+
+#orders .orders-table-wrap table { min-width: 980px; }
+.order-row td { vertical-align: middle; }
+.order-ticket-cell { min-width: 120px; color: #26323b; font-weight: 700; }
+.order-customer-cell { min-width: 170px; }
+.order-customer-cell strong, .order-payment-cell strong { display: block; color: #26323b; font-size: 13px; }
+.order-customer-cell small, .order-payment-cell small { display: block; margin-top: 4px; color: #72808a; font-size: 11px; }
+.order-progress-cell { min-width: 126px; }
+.order-progress-cell .order-stage-select { display: block; width: 112px; margin-top: 7px; }
+.order-payment-cell { min-width: 132px; }
+.order-payment-cell .payment-status { margin-top: 7px; }
+.order-collection-cell { min-width: 138px; color: #52616a; font-size: 12px; }
